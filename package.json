@@ -2,6 +2,10 @@
   "name": "youroutine-adonis",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=16.3.1",
+    "npm": ">=8.1.2"
+  },
   "scripts": {
     "dev": "node ace serve --watch",
     "build": "node ace build --production",
@@ -23,7 +27,6 @@
     "@adonisjs/repl": "^3.1.7",
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
-    "semver": "^7.3.5",
     "source-map-support": "^0.5.21"
   }
 }
