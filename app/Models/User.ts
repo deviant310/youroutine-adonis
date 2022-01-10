@@ -6,6 +6,9 @@ export default class User extends BaseModel {
   public id: number
 
   @column()
+  public phone: string
+
+  @column()
   public name: string
 
   @column.dateTime({ autoCreate: true })

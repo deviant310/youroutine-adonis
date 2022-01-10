@@ -6,9 +6,13 @@ end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
+ij_typescript_use_double_quotes = false
+ij_typescript_use_semicolon_after_statement = false
+ij_javascript_use_double_quotes = false
+ij_javascript_use_semicolon_after_statement = false
 
 [*.json]
-insert_final_newline = ignore
+insert_final_newline = false
 
 [*.md]
 trim_trailing_whitespace = false
