@@ -19,8 +19,9 @@
 */
 
 import Route from '@ioc:Adonis/Core/Route'
-import User from 'App/Models/User'
 
-Route.get('/', async () => {
-  return await User.all()
-})
+Route.get('/', async () => {})
+
+Route.group(() => {
+  Route.resource('/users', 'UsersController').apiOnly()
+}).prefix('api')
