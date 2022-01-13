@@ -7,9 +7,7 @@ export default class AuthController {
 
     const guard = auth.use('api')
 
-    return await guard.attempt(email, password, {
-      expiresIn: '1min',
-    })
+    return await guard.attempt(email, password)
   }
 
   public async logout ({ auth }: HttpContextContract) {
