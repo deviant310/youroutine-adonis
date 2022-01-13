@@ -9,7 +9,10 @@ Content-Type: application/json
 
 > {% client.global.set("auth_token", response.body.token); %}
 
-
 ### Logout
 POST {{host}}/api/logout
+Authorization: Bearer {{auth_token}}
+
+### Users list
+GET {{host}}/api/users
 Authorization: Bearer {{auth_token}}
