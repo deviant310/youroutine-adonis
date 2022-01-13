@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Title
+  description: Title
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:3333'
+    description: Development server
+paths:
+  /api/login:
+    post:
+      description: Login request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                email:
+                  description: User email
+                  type: string
+                password:
+                  description: User password
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Successfull login.
+          content:
+            application/json:
+              schema:
+                type: array
+  /api/logout:
+    post:
+      description: Logout request
+      responses:
+        '204':
+          description: Successfull logout.
+  /api/users:
+    get:
+      description: Get users list
+      responses:
+        '200':
+          description: Users list.
+          content:
+            application/json:
+              schema:
+                type: array
+

@@ -1,0 +1,3 @@
+### Users list
+GET {{host}}/api/users
+Authorization: Bearer {{auth_token}}

@@ -1,0 +1,15 @@
+### Login
+POST {{host}}/api/login
+Content-Type: application/json
+
+{
+  "email": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+
+### Logout
+POST {{host}}/api/logout
+Authorization: Bearer {{auth_token}}
