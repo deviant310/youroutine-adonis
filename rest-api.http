@@ -1,10 +1,24 @@
-### Login
-POST {{host}}/api/login
+### Register
+POST {{host}}/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "{{username}}",
-  "password": "{{password}}"
+  "phone": "{{phone}}"
+}
+
+> {%
+ client.global.set("session_id", response.body.session_id)
+ client.global.set("user_id", response.body.user_id)
+ %}
+
+### Verify
+POST {{host}}/api/auth/verify
+Content-Type: application/json
+
+{
+  "session_id": "{{session_id}}",
+  "user_id": "{{user_id}}",
+  "verification_code": "910842"
 }
 
 > {% client.global.set("auth_token", response.body.token); %}

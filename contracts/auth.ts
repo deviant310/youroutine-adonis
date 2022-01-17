@@ -57,11 +57,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
   interface GuardsList {
     /*
     |--------------------------------------------------------------------------
-    | OAT Guard
+    | OATVT Guard
     |--------------------------------------------------------------------------
     |
-    | OAT, stands for (Opaque access tokens) guard uses database backed tokens
-    | to authenticate requests.
+    | OATVT, stands for (Opaque access tokens with verification tokens) guard uses database
+    | backed verification tokens to verify authenticated user and access tokens to authorize
+    | requests.
     |
     */
     api: {

@@ -6,3 +6,9 @@ coverage
 .env
 tmp
 http-client.env.json
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
