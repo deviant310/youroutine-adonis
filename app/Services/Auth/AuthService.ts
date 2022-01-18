@@ -1,13 +1,15 @@
-import { base64 } from '@ioc:Adonis/Core/Helpers'
+import { base64, string } from '@ioc:Adonis/Core/Helpers'
+import Hash from '@ioc:Adonis/Core/Hash'
+import HttpContext from '@ioc:Adonis/Core/HttpContext'
 import { Exception } from '@adonisjs/core/build/standalone'
 import User from 'App/Models/User'
 import Session from 'App/Models/Session'
 import faker from 'faker'
 import RegisteredSession from './RegisteredSession'
-import Hash from '@ioc:Adonis/Core/Hash'
 
 export default class AuthService {
   private readonly sessionIdEncodeIterationsCount = 7
+  private readonly authTokenLength = 60
 
   public async register (phone: string) {
     const user = await User.findByOrFail('phone', phone)
@@ -40,10 +42,19 @@ export default class AuthService {
     const codeIsVerified = await Hash.verify(session.verificationCode, verificationCode)
 
     if(codeIsVerified){
+      session.accessToken = string.generateRandom(this.authTokenLength)
+      session.save()
 
+      return [sessionId, session.accessToken].join('.')
     } else {
       throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED')
     }
+  }
+
+  public check(accessToken){
+    const ctx = HttpContext.get()
+
+    HttpContext.get().request.header('Authorization');
   }
 
   private encodeSessionId (sessionId: number): string {

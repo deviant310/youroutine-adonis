@@ -1,6 +1,7 @@
 import Hash from '@ioc:Adonis/Core/Hash'
 import { BaseModel, column, beforeSave } from '@ioc:Adonis/Lucid/Orm'
 import { DateTime } from 'luxon'
+import { createHash } from 'crypto'
 
 export default class Session extends BaseModel {
   @column({ isPrimary: true })
@@ -31,6 +32,13 @@ export default class Session extends BaseModel {
   public static async hashVerificationCode (session: Session) {
     if (session.$dirty.verificationCode) {
       session.verificationCode = await Hash.make(session.verificationCode)
+    }
+  }
+
+  @beforeSave()
+  public static async hashAccessToken (session: Session) {
+    if (session.$dirty.accessToken) {
+      session.accessToken = createHash('sha256').update(session.accessToken).digest('hex')
     }
   }
 }
