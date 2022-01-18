@@ -13,6 +13,7 @@ ij_javascript_use_double_quotes = false
 ij_javascript_use_semicolon_after_statement = false
 ij_javascript_spaces_within_object_literal_braces = true
 ij_any_space_before_method_parentheses = true
+ij_any_keep_indents_on_empty_lines = false
 
 [*.json]
 insert_final_newline = false
