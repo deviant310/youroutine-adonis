@@ -3,23 +3,23 @@ import { column, BaseModel } from '@ioc:Adonis/Lucid/Orm'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
-  public id: number
+  public id!: number
 
   @column()
-  public phone: string
+  public phone!: string
 
   @column()
-  public name: string
+  public name?: string
 
   @column()
-  public surname: string
+  public surname?: string
 
   @column()
-  public patronymic: string
+  public patronymic?: string
 
   @column.dateTime({ autoCreate: true })
-  public createdAt: DateTime
+  public createdAt!: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  public updatedAt: DateTime
+  public updatedAt!: DateTime
 }

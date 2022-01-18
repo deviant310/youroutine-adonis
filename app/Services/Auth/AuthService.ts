@@ -1,21 +1,19 @@
 import { base64, string } from '@ioc:Adonis/Core/Helpers'
 import Hash from '@ioc:Adonis/Core/Hash'
-import HttpContext from '@ioc:Adonis/Core/HttpContext'
 import { Exception } from '@adonisjs/core/build/standalone'
 import User from 'App/Models/User'
 import Session from 'App/Models/Session'
 import faker from 'faker'
 import RegisteredSession from './RegisteredSession'
+import VerifiedSession from './VerifiedSession'
 
 export default class AuthService {
-  private readonly sessionIdEncodeIterationsCount = 7
+  private readonly sessionIdConvertIterationsCount = 6
+  private readonly sessionIdConvertAsPartOfTokenIterationsCount = 2
   private readonly authTokenLength = 60
 
   public async register (phone: string) {
     const user = await User.findByOrFail('phone', phone)
-      .catch(err => {
-        throw new Exception('User not found', err.status, 'E_USER_NOT_FOUND')
-      })
 
     const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString()
 
@@ -26,44 +24,57 @@ export default class AuthService {
       verificationCode,
     })
 
-    return new RegisteredSession(this.encodeSessionId(session.id), session.userId)
+    return new RegisteredSession(
+      AuthService.encodeSessionId(session.id, this.sessionIdConvertIterationsCount),
+      session.userId
+    )
   }
 
-  public async verify (sessionId: string, userId: number, verificationCode: string) {
+  public async verify (sessionId: string, verificationCode: string) {
     const session = await Session
-      .query()
-      .where(Session.primaryKey, this.decodeSessionId(sessionId))
-      .where('user_id', userId)
-      .firstOrFail()
+      .findOrFail(AuthService.decodeSessionId(sessionId, this.sessionIdConvertIterationsCount))
       .catch(err => {
-        throw new Exception('Session not found', err.status, 'E_SESSION_NOT_FOUND')
+        throw new Exception('Session not found', err.status, err.code)
       })
 
     const codeIsVerified = await Hash.verify(session.verificationCode, verificationCode)
 
-    if(codeIsVerified){
-      session.accessToken = string.generateRandom(this.authTokenLength)
+    if (codeIsVerified) {
+      const accessToken = string.generateRandom(this.authTokenLength)
+
+      session.accessToken = accessToken
       session.save()
 
-      return [sessionId, session.accessToken].join('.')
+      return new VerifiedSession(
+        this.generatePublicAccessToken(session.id, accessToken),
+      )
     } else {
       throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED')
     }
   }
 
-  public check(accessToken){
-    const ctx = HttpContext.get()
+  public check (publicAccessToken: string) {
+    const [ sessionId, accessToken ] = publicAccessToken.split('.')
 
-    HttpContext.get().request.header('Authorization');
+    if(!sessionId || !accessToken) {
+      throw new Exception('Session not found', 500, 'E_ACCESS_TOKEN_PARSE_ERROR')
+    }
   }
 
-  private encodeSessionId (sessionId: number): string {
-    return [...Array(this.sessionIdEncodeIterationsCount).keys()]
-      .reduce(base64.encode as (string) => string, sessionId.toString())
+  private static encodeSessionId (sessionId: number, iterationsCount: number): string {
+    return [...Array(iterationsCount).keys()]
+      .reduce(base64.encode as (str: string) => string, sessionId.toString())
   }
 
-  private decodeSessionId (sessionId: string): number {
-    return parseInt([...Array(this.sessionIdEncodeIterationsCount).keys()]
-      .reduce(base64.decode as (string) => string, sessionId))
+  private static decodeSessionId (sessionId: string, iterationsCount: number): number {
+    return parseInt([...Array(iterationsCount).keys()]
+      .reduce(base64.decode as (str: string) => string, sessionId))
+  }
+
+  private generatePublicAccessToken (sessionId: number, accessToken: string) {
+    return [
+      AuthService.encodeSessionId(sessionId, this.sessionIdConvertAsPartOfTokenIterationsCount),
+      accessToken,
+    ].join('.')
   }
 }

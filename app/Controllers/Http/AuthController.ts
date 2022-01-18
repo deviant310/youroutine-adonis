@@ -15,10 +15,9 @@ export default class AuthController {
     const auth = new AuthService()
 
     const sessionId = request.input('session_id')
-    const userId = request.input('user_id')
     const verificationCode = request.input('verification_code')
 
-    return auth.verify(sessionId, userId, verificationCode)
+    return auth.verify(sessionId, verificationCode)
   }
 
   public async logout ({ auth }: HttpContextContract) {

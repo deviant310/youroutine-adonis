@@ -2,31 +2,30 @@ import Hash from '@ioc:Adonis/Core/Hash'
 import { BaseModel, column, beforeSave } from '@ioc:Adonis/Lucid/Orm'
 import { DateTime } from 'luxon'
 import { createHash } from 'crypto'
-
 export default class Session extends BaseModel {
   @column({ isPrimary: true })
-  public id: number
+  public id!: number
 
   @column()
-  public userId: number
+  public userId!: number
 
   @column({ serializeAs: null })
-  public verificationCode: string
+  public verificationCode!: string
 
   @column({ serializeAs: null })
-  public accessToken: string
+  public accessToken?: string
 
   @column()
-  public attempts: number
+  public attempts!: number
 
   @column()
-  public meta: object
+  public meta?: object
 
   @column.dateTime()
-  public expiresAt: DateTime
+  public expiresAt?: DateTime
 
   @column.dateTime({ autoCreate: true })
-  public createdAt: DateTime
+  public createdAt!: DateTime | undefined
 
   @beforeSave()
   public static async hashVerificationCode (session: Session) {
@@ -38,7 +37,7 @@ export default class Session extends BaseModel {
   @beforeSave()
   public static async hashAccessToken (session: Session) {
     if (session.$dirty.accessToken) {
-      session.accessToken = createHash('sha256').update(session.accessToken).digest('hex')
+      session.accessToken = createHash('sha256').update(session.$dirty.accessToken).digest('hex')
     }
   }
 }

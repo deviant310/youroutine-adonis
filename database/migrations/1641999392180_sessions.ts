@@ -6,7 +6,7 @@ export default class Sessions extends BaseSchema {
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').primary()
-      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
+      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable()
       table.string('verification_code', 180).notNullable()
       table.string('auth_token', 64).nullable().unique()
       table.integer('login_attempts').notNullable().defaultTo(0)

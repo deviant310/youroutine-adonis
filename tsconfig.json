@@ -11,6 +11,7 @@
     "outDir": "build",
     "rootDir": "./",
     "sourceMap": true,
+    "strict": true,
     "paths": {
       "App/*": [
         "./app/*"
@@ -33,5 +34,4 @@
       "@adonisjs/auth"
     ]
   },
-  "strict": true
 }
