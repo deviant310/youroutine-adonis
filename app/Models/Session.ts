@@ -10,34 +10,32 @@ export default class Session extends BaseModel {
   public userId!: number
 
   @column({ serializeAs: null })
-  public verificationCode!: string
+  public verificationCode?: string | null
 
   @column({ serializeAs: null })
-  public accessToken?: string
+  public accessToken?: string | null
 
   @column()
   public attempts!: number
 
   @column()
-  public meta?: object
+  public meta?: object | null
 
   @column.dateTime()
-  public expiresAt?: DateTime
+  public expiresAt?: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   public createdAt!: DateTime | undefined
 
   @beforeSave()
   public static async hashVerificationCode (session: Session) {
-    if (session.$dirty.verificationCode) {
-      session.verificationCode = await Hash.make(session.verificationCode)
-    }
+    if (session.$dirty.verificationCode)
+      session.verificationCode = await Hash.make(session.$dirty.verificationCode)
   }
 
   @beforeSave()
   public static async hashAccessToken (session: Session) {
-    if (session.$dirty.accessToken) {
+    if (session.$dirty.accessToken)
       session.accessToken = createHash('sha256').update(session.$dirty.accessToken).digest('hex')
-    }
   }
 }

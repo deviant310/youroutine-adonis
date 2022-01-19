@@ -6,13 +6,53 @@ import Session from 'App/Models/Session'
 import faker from 'faker'
 import RegisteredSession from './RegisteredSession'
 import VerifiedSession from './VerifiedSession'
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { createHash } from 'crypto'
 
 export default class AuthService {
-  private readonly sessionIdConvertIterationsCount = 6
-  private readonly sessionIdConvertAsPartOfTokenIterationsCount = 2
-  private readonly authTokenLength = 60
+  private _session?: Session
+  private _user?: User
+  private readonly _ctx: HttpContextContract
+  private readonly _sessionIdConvertIterationsCount = 6
+  private readonly _accessTokenConvertIterationsCount = 2
+  private readonly _authTokenLength = 60
 
-  public async register (phone: string) {
+  private static encodeSessionId (sessionId: number, iterationsCount: number): string {
+    return [...Array(iterationsCount).keys()]
+      .reduce(str => base64.encode(str), sessionId.toString())
+  }
+
+  private static decodeSessionId (sessionId: string, iterationsCount: number): number {
+    return parseInt([...Array(iterationsCount).keys()]
+      .reduce(str => base64.decode(str), sessionId))
+  }
+
+  private static generatePublicAccessToken (sessionId: number, accessToken: string, encodeIterationsCount: number) {
+    const sessionIdEncoded = AuthService.encodeSessionId(sessionId, encodeIterationsCount)
+
+    return [sessionIdEncoded, accessToken].join('.')
+  }
+
+  private static parsePublicAccessToken (publicAccessToken: string, decodeIterationsCount: number): [number, string] {
+    const [sessionIdEncoded, accessToken] = publicAccessToken.split('.')
+    const sessionId = AuthService.decodeSessionId(sessionIdEncoded, decodeIterationsCount)
+
+    return [sessionId, accessToken]
+  }
+
+  constructor (ctx: HttpContextContract) {
+    this._ctx = ctx
+  }
+
+  public get session (): Session | undefined {
+    return this._session
+  }
+
+  public get user (): User | undefined {
+    return this._user
+  }
+
+  public async register (phone: string): Promise<RegisteredSession> {
     const user = await User.findByOrFail('phone', phone)
 
     const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString()
@@ -24,57 +64,79 @@ export default class AuthService {
       verificationCode,
     })
 
-    return new RegisteredSession(
-      AuthService.encodeSessionId(session.id, this.sessionIdConvertIterationsCount),
-      session.userId
-    )
+    const sessionIdEncoded = AuthService.encodeSessionId(session.id, this._sessionIdConvertIterationsCount)
+
+    return new RegisteredSession(sessionIdEncoded)
   }
 
-  public async verify (sessionId: string, verificationCode: string) {
-    const session = await Session
-      .findOrFail(AuthService.decodeSessionId(sessionId, this.sessionIdConvertIterationsCount))
-      .catch(err => {
-        throw new Exception('Session not found', err.status, err.code)
-      })
+  public async verify (sessionIdEncoded: string, verificationCode: string): Promise<VerifiedSession> {
+    const sessionId = AuthService.decodeSessionId(sessionIdEncoded, this._sessionIdConvertIterationsCount)
+    const session = await Session.findOrFail(sessionId)
+
+    if(!session.verificationCode)
+      throw new Exception('Verification code is empty', 403, 'E_VERIFICATION_CODE_EMPTY')
+
+    /*if(!session.verificationCode)
+      throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED')*/
 
     const codeIsVerified = await Hash.verify(session.verificationCode, verificationCode)
 
     if (codeIsVerified) {
-      const accessToken = string.generateRandom(this.authTokenLength)
+      const accessToken = string.generateRandom(this._authTokenLength)
 
       session.accessToken = accessToken
-      session.save()
+      session.verificationCode = null
 
-      return new VerifiedSession(
-        this.generatePublicAccessToken(session.id, accessToken),
-      )
+      await session.save()
+
+      const publicAccessToken = AuthService
+        .generatePublicAccessToken(session.id, accessToken, this._accessTokenConvertIterationsCount)
+
+      return new VerifiedSession(publicAccessToken)
     } else {
       throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED')
     }
   }
 
-  public check (publicAccessToken: string) {
-    const [ sessionId, accessToken ] = publicAccessToken.split('.')
+  public async authorize (): Promise<void> {
+    const publicAccessToken = this._ctx.request.header('Authorization')?.split('Bearer ')?.[1]
 
-    if(!sessionId || !accessToken) {
-      throw new Exception('Session not found', 500, 'E_ACCESS_TOKEN_PARSE_ERROR')
+    if (!publicAccessToken)
+      throw new Exception('Bearer token is empty', 403, 'E_PUBLIC_ACCESS_TOKEN_EMPTY')
+
+    const [sessionId, accessToken] = AuthService
+      .parsePublicAccessToken(publicAccessToken, this._accessTokenConvertIterationsCount)
+
+    if (!sessionId || !accessToken)
+      throw new Exception('Error parsing public access token', 403, 'E_PUBLIC_ACCESS_TOKEN_PARSE_ERROR')
+
+    this._session = await Session.findOrFail(sessionId)
+
+    if(this._session.accessToken !== createHash('sha256').update(accessToken).digest('hex'))
+      throw new Exception('Wrong access token', 403, 'E_ACCESS_TOKEN_INVALID')
+
+    await this.login(this._session.userId)
+  }
+
+  public async login (id: number) {
+    this._user = await User.findOrFail(id)
+  }
+
+  public async check (): Promise<boolean> {
+    try {
+      await this.authorize()
+
+      return true
+    } catch (_) {
+      return false
     }
   }
 
-  private static encodeSessionId (sessionId: number, iterationsCount: number): string {
-    return [...Array(iterationsCount).keys()]
-      .reduce(base64.encode as (str: string) => string, sessionId.toString())
-  }
+  public async logout () {
+    if(this._session)
+      await this._session.delete()
 
-  private static decodeSessionId (sessionId: string, iterationsCount: number): number {
-    return parseInt([...Array(iterationsCount).keys()]
-      .reduce(base64.decode as (str: string) => string, sessionId))
-  }
-
-  private generatePublicAccessToken (sessionId: number, accessToken: string) {
-    return [
-      AuthService.encodeSessionId(sessionId, this.sessionIdConvertAsPartOfTokenIterationsCount),
-      accessToken,
-    ].join('.')
+    this._session = undefined
+    this._user = undefined
   }
 }

@@ -8,7 +8,6 @@ Content-Type: application/json
 
 > {%
  client.global.set("session_id", response.body.session_id)
- client.global.set("user_id", response.body.user_id)
  %}
 
 ### Verify
@@ -17,8 +16,7 @@ Content-Type: application/json
 
 {
   "session_id": "{{session_id}}",
-  "user_id": "{{user_id}}",
-  "verification_code": "910842"
+  "verification_code": "209344"
 }
 
 > {% client.global.set("auth_token", response.body.token); %}
