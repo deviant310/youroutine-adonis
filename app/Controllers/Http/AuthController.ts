@@ -1,6 +1,15 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 export default class AuthController {
+  public async login ({ auth, request }: HttpContextContract) {
+    const email = request.input('email')
+    const password = request.input('password')
+
+    return await auth.use('api').attempt(email, password, {
+      expiresIn: '1mins',
+    })
+  }
+
   public async register ({ auth, request }: HttpContextContract) {
     const phone = request.input('phone')
 

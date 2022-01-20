@@ -1,3 +1,16 @@
+### Login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@foobar.team",
+  "password": "123456"
+}
+
+> {%
+ client.global.set("auth_token", response.body.token)
+ %}
+
 ### Register
 POST {{host}}/api/auth/register
 Content-Type: application/json

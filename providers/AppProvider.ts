@@ -11,12 +11,12 @@ export default class AppProvider {
   }
 
   public async boot () {
-    const { default: AuthService } = await import('App/Services/Auth/AuthService')
+    /*const { default: AuthService } = await import('App/Services/Auth/AuthService')
     const HttpContext = this.app.container.use('Adonis/Core/HttpContext')
 
     HttpContext.getter('auth', function auth () {
       return new AuthService(this)
-    }, true)
+    }, true)*/
   }
 
   public async ready () {
