@@ -98,17 +98,12 @@ export default class AuthService {
     }
   }
 
-  public async authorize (): Promise<void> {
-    const publicAccessToken = this._ctx.request.header('Authorization')?.split('Bearer ')?.[1]
-
-    if (!publicAccessToken)
-      throw new Exception('Bearer token is empty', 403, 'E_PUBLIC_ACCESS_TOKEN_EMPTY')
-
+  public async authorizeByToken (token: string): Promise<void> {
     const [sessionId, accessToken] = AuthService
-      .parsePublicAccessToken(publicAccessToken, this._accessTokenConvertIterationsCount)
+      .parsePublicAccessToken(token, this._accessTokenConvertIterationsCount)
 
     if (!sessionId || !accessToken)
-      throw new Exception('Error parsing public access token', 403, 'E_PUBLIC_ACCESS_TOKEN_PARSE_ERROR')
+      throw new Exception('Error parsing public access token', 403, 'E_ACCESS_TOKEN_PARSE_ERROR')
 
     this._session = await Session.findOrFail(sessionId)
 
@@ -120,16 +115,6 @@ export default class AuthService {
 
   public async login (id: number) {
     this._user = await User.findOrFail(id)
-  }
-
-  public async check (): Promise<boolean> {
-    try {
-      await this.authorize()
-
-      return true
-    } catch (_) {
-      return false
-    }
   }
 
   public async logout () {

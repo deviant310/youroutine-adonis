@@ -1,3 +1,4 @@
+import Application from '@ioc:Adonis/Core/Application'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { Exception } from '@adonisjs/core/build/standalone'
 
@@ -9,10 +10,24 @@ import { Exception } from '@adonisjs/core/build/standalone'
  * of named middleware.
  */
 export default class AuthMiddleware {
-  public async handle ({ auth }: HttpContextContract, next: () => Promise<void>) {
-    if (await auth.check())
-      await next()
-    else
-      throw new Exception('Unauthorized access', 403, 'E_UNAUTHORIZED_ACCESS')
+  public async handle (ctx: HttpContextContract, next: () => Promise<void>) {
+    try {
+      await this.handleAuthorization(ctx, next)
+    } catch (err) {
+      if(Application.inProduction)
+        throw new Exception('Unauthorized access', 403, 'E_UNAUTHORIZED_ACCESS')
+      else
+        throw err
+    }
+  }
+
+  protected async handleAuthorization ({ auth, request }: HttpContextContract, next: () => Promise<void>) {
+    const token = request.header('Authorization')?.split('Bearer ')?.[1]
+
+    if (!token)
+      throw new Exception('Bearer token is empty', 403, 'E_BEARER_TOKEN_EMPTY')
+
+    await auth.authorizeByToken(token)
+    await next()
   }
 }
