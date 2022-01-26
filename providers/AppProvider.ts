@@ -1,4 +1,5 @@
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
+import AuthService from 'App/Services/Auth/AuthService'
 
 export default class AppProvider {
   public static needsApplication = true
@@ -7,20 +8,31 @@ export default class AppProvider {
   }
 
   public register () {
-    this.app.container.make('App/Services/Auth/AuthService')
+    this.app.container.singleton('YouRoutine/Auth', () => {
+      return new AuthService()
+    })
   }
 
   public async boot () {
-    const { default: Route } = await import('@ioc:Adonis/Core/Route')
+    /**
+     * Init default routes
+     */
+    const Route = this.app.container.use('Adonis/Core/Route')
+
     Route.get('/', async () => {})
 
-    const { default: AuthService } = await import('App/Services/Auth/AuthService')
+    /**
+     * Init custom services
+     */
+    this.app.container.withBindings(['Adonis/Core/HttpContext', 'YouRoutine/Auth'], (HttpContext, auth) => {
+      HttpContext.getter('auth', function auth() {
+        return Auth.getAuthForRequest(this);
+      }, true);
+    });
+    const auth = this.app.container.use('YouRoutine/Auth')
     const HttpContext = this.app.container.use('Adonis/Core/HttpContext')
 
-    HttpContext.getter('auth', () => {
-
-      return new AuthService(this)
-    }, true)
+    HttpContext.getter('auth', () => auth)
   }
 
   public async ready () {

@@ -5,9 +5,9 @@
  * file.
  */
 
-import UserTest from 'App/Models/UserTest'
-
 declare module '@ioc:Adonis/Addons/Auth' {
+  import UserTest from 'App/Models/UserTest'
+
   /*
   |--------------------------------------------------------------------------
   | Providers
@@ -69,4 +69,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
       config: OATGuardConfig<'user'>
     }
   }
+}
+
+declare module '@ioc:YouRoutine/Auth' {
+  import AuthService from 'App/Services/Auth/AuthService'
+
+  const auth: AuthService
+
+  export default auth
 }

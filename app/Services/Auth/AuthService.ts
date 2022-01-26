@@ -1,18 +1,16 @@
-import { base64, string } from '@ioc:Adonis/Core/Helpers'
-import Hash from '@ioc:Adonis/Core/Hash'
+import { createHash } from 'crypto'
+import faker from 'faker'
 import { Exception } from '@adonisjs/core/build/standalone'
+import Hash from '@ioc:Adonis/Core/Hash'
+import { base64, string } from '@ioc:Adonis/Core/Helpers'
 import User from 'App/Models/User'
 import Session from 'App/Models/Session'
-import faker from 'faker'
 import RegisteredSession from './RegisteredSession'
 import VerifiedSession from './VerifiedSession'
-import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { createHash } from 'crypto'
 
 export default class AuthService {
   private _session?: Session
   private _user?: User
-  private readonly _ctx: HttpContextContract
   private readonly _sessionIdConvertIterationsCount = 6
   private readonly _accessTokenConvertIterationsCount = 2
   private readonly _authTokenLength = 60
@@ -40,9 +38,7 @@ export default class AuthService {
     return [sessionId, accessToken]
   }
 
-  constructor (ctx: HttpContextContract) {
-    this._ctx = ctx
-  }
+  constructor () {}
 
   public get session (): Session | undefined {
     return this._session
@@ -57,7 +53,7 @@ export default class AuthService {
 
     const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString()
 
-    console.log(verificationCode)
+    //console.log(verificationCode)
 
     const session = await Session.create({
       userId: user.id,
