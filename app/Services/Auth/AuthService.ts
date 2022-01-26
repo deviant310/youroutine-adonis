@@ -3,6 +3,7 @@ import faker from 'faker'
 import { Exception } from '@adonisjs/core/build/standalone'
 import Hash from '@ioc:Adonis/Core/Hash'
 import { base64, string } from '@ioc:Adonis/Core/Helpers'
+import { AuthRepository } from '@ioc:YouRoutine/Auth'
 import User from 'App/Models/User'
 import Session from 'App/Models/Session'
 import RegisteredSession from './RegisteredSession'
@@ -38,7 +39,7 @@ export default class AuthService {
     return [sessionId, accessToken]
   }
 
-  constructor () {}
+  constructor (protected repo: AuthRepository) {}
 
   public get session (): Session | undefined {
     return this._session
@@ -55,7 +56,7 @@ export default class AuthService {
 
     //console.log(verificationCode)
 
-    const session = await Session.create({
+    const session = await this.repo.create({
       userId: user.id,
       verificationCode,
     })
