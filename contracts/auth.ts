@@ -72,9 +72,24 @@ declare module '@ioc:Adonis/Addons/Auth' {
 }
 
 declare module '@ioc:YouRoutine/Auth' {
-  import AuthService from 'App/Services/Auth/AuthService'
+  import { DateTime } from 'luxon'
+  import { Repository } from '@ioc:YouRoutine/Core/Application'
 
-  const auth: AuthService
+  interface Session {
+    sessionId: string
+  }
 
-  export default auth
+  interface Token {
+    token: string
+    expiresAt?: DateTime
+  }
+
+  export interface AuthRepository extends Repository {
+    create(attributes: object): Session
+  }
+
+  export interface AuthService {
+    register(phone: string): Session
+    verify(sessionId: number, verificationCode: string): Token
+  }
 }

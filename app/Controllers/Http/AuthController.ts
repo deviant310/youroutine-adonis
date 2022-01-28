@@ -1,6 +1,12 @@
+import { inject } from '@adonisjs/fold'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import
 
+@inject(['@ioc:YouRoutine/Services/Auth'])
 export default class AuthController {
+  constructor (auth) {
+  }
+
   public async login ({ twoFactorAuth, request }: HttpContextContract) {
     const email = request.input('email')
     const password = request.input('password')

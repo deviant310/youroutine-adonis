@@ -11,8 +11,6 @@ export default class AppProvider {
     this.app.container.singleton('YouRoutine/Auth', () => {
       return new AuthService()
     })
-
-    this.app.container.bind('')
   }
 
   public async boot () {
