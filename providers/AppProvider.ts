@@ -1,5 +1,5 @@
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
-import AuthService from 'App/Services/Auth/AuthService'
+//import AuthService from 'App/Services/AuthService'
 
 export default class AppProvider {
   public static needsApplication = true
@@ -7,10 +7,17 @@ export default class AppProvider {
   constructor (protected app: ApplicationContract) {
   }
 
-  public register () {
-    this.app.container.singleton('YouRoutine/Auth', () => {
+  public async register () {
+    /*this.app.container.singleton('YouRoutine/Auth', () => {
       return new AuthService()
-    })
+    })*/
+    const { default: LucidRepository } = await import('App/Repositories/LucidRepository')
+    const { default: User } = await import('App/Models/User')
+    const { default: Session } = await import('App/Models/Session')
+    this.app.container
+      .bind('YouRoutine/Repository/User', () => new LucidRepository(User.query()))
+      //.bind('YouRoutine/Repository/Code', () => new LucidRepository(Code.query()))
+      .bind('YouRoutine/Repository/Session', () => new LucidRepository(Session.query()))
   }
 
   public async boot () {
@@ -24,7 +31,7 @@ export default class AppProvider {
     /**
      * Init custom services
      */
-    this.app.container.withBindings(['Adonis/Core/HttpContext', 'YouRoutine/Auth'], (HttpContext, auth) => {
+    /*this.app.container.withBindings(['Adonis/Core/HttpContext', 'YouRoutine/Auth'], (HttpContext, auth) => {
       HttpContext.getter('auth', function auth() {
         return Auth.getAuthForRequest(this);
       }, true);
@@ -32,7 +39,7 @@ export default class AppProvider {
     const auth = this.app.container.use('YouRoutine/Auth')
     const HttpContext = this.app.container.use('Adonis/Core/HttpContext')
 
-    HttpContext.getter('auth', () => auth)
+    HttpContext.getter('auth', () => auth)*/
   }
 
   public async ready () {

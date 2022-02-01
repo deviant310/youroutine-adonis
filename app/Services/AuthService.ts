@@ -3,12 +3,20 @@ import faker from 'faker'
 import { Exception } from '@adonisjs/core/build/standalone'
 import Hash from '@ioc:Adonis/Core/Hash'
 import { base64, string } from '@ioc:Adonis/Core/Helpers'
-import { AuthRepository } from '@ioc:YouRoutine/Auth'
+//import { AuthRepository } from '@ioc:YouRoutine/Auth'
 import User from 'App/Models/User'
 import Session from 'App/Models/Session'
-import RegisteredSession from './RegisteredSession'
-import VerifiedSession from './VerifiedSession'
+import RegisteredSession from './Auth/RegisteredSession'
+import VerifiedSession from './Auth/VerifiedSession'
+//import type LucidRepository from 'App/Repositories/LucidRepository'
+import { RepositoryContract } from '@ioc:Adonis/Core/Repository'
+import { inject } from '@adonisjs/fold'
 
+@inject([
+  '@ioc:YouRoutine/Repository/User',
+  '@ioc:YouRoutine/Repository/Code',
+  '@ioc:YouRoutine/Repository/Session',
+])
 export default class AuthService {
   private _session?: Session
   private _user?: User
@@ -39,7 +47,11 @@ export default class AuthService {
     return [sessionId, accessToken]
   }
 
-  constructor (protected repo: AuthRepository) {}
+  constructor (
+    protected userRepo: RepositoryContract,
+    protected codeRepo: RepositoryContract,
+    protected sessionRepo: RepositoryContract,
+  ) {}
 
   public get session (): Session | undefined {
     return this._session
@@ -50,16 +62,17 @@ export default class AuthService {
   }
 
   public async register (phone: string): Promise<RegisteredSession> {
-    const user = await User.findByOrFail('phone', phone)
+    const user = await this.userRepo.findBy('phone', phone)
 
     const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString()
     // @TODO здесь нужно инициировать отправку события типа onRegister
     //console.log(verificationCode)
     // @TODO здесь будет задействован репозиторий verificationCodeRepo
-    const session = await this.repo.create({
-      userId: user.id,
-      verificationCode,
-    })
+    const session = await this.sessionRepo
+      .create({
+        userId: user.id,
+        verificationCode,
+      })
     // @TODO убрать encodeSessionId, возвращать только sessionId
     const sessionIdEncoded = AuthService.encodeSessionId(session.id, this._sessionIdConvertIterationsCount)
 
