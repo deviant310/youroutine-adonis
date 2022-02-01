@@ -15,7 +15,7 @@ export default class AuthService {
   private readonly _sessionIdConvertIterationsCount = 6
   private readonly _accessTokenConvertIterationsCount = 2
   private readonly _authTokenLength = 60
-
+  // @TODO вынести методы в generatePublicAccessToken и parsePublicAccessToken соответственно, сделать их protected методами класса
   private static encodeSessionId (sessionId: number, iterationsCount: number): string {
     return [...Array(iterationsCount).keys()]
       .reduce(str => base64.encode(str), sessionId.toString())
@@ -53,14 +53,14 @@ export default class AuthService {
     const user = await User.findByOrFail('phone', phone)
 
     const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString()
-
+    // @TODO здесь нужно инициировать отправку события типа onRegister
     //console.log(verificationCode)
-
+    // @TODO здесь будет задействован репозиторий verificationCodeRepo
     const session = await this.repo.create({
       userId: user.id,
       verificationCode,
     })
-
+    // @TODO убрать encodeSessionId, возвращать только sessionId
     const sessionIdEncoded = AuthService.encodeSessionId(session.id, this._sessionIdConvertIterationsCount)
 
     return new RegisteredSession(sessionIdEncoded)
