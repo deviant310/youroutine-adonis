@@ -1,35 +1,36 @@
-import { ApplicationContract } from '@ioc:Adonis/Core/Application'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application';
 //import AuthService from 'App/Services/AuthService'
 
 export default class AppProvider {
-  public static needsApplication = true
+  public static needsApplication = true;
 
   constructor (protected app: ApplicationContract) {
   }
 
-  public async register () {
+  public async register (): Promise<void> {
     /*this.app.container.singleton('YouRoutine/Auth', () => {
       return new AuthService()
     })*/
-    const { default: LucidRepository } = await import('App/Repositories/LucidRepository')
+    const { LucidRepository } = await import('App/Repositories');
 
-    const { default: User } = await import('App/Models/User')
-    const { default: Session } = await import('App/Models/Session')
-    const { default: Verification } = await import('App/Models/Verification')
+    const { User, Session, Verification } = await import('App/Models');
 
     this.app.container
-      .bind('YouRoutine/Repository/User', () => new LucidRepository(User.query()))
-      .bind('YouRoutine/Repository/Session', () => new LucidRepository(Session.query()))
-      .bind('YouRoutine/Repository/Verification', () => new LucidRepository(Verification.query()))
+      .bind('YouRoutine/Repository', () => ({
+        userRepo: new LucidRepository(User.query()),
+        sessionRepo: new LucidRepository(Session.query()),
+        verificationRepo: new LucidRepository(Verification.query()),
+      }));
   }
 
-  public async boot () {
+  public async boot (): Promise<void> {
     /**
      * Init default routes
      */
-    const Route = this.app.container.use('Adonis/Core/Route')
+    const Route = this.app.container.use('Adonis/Core/Route');
 
-    Route.get('/', async () => {})
+    Route.get('/', async () => {
+    });
 
     /**
      * Init custom services
@@ -45,11 +46,11 @@ export default class AppProvider {
     HttpContext.getter('auth', () => auth)*/
   }
 
-  public async ready () {
+  public async ready (): Promise<void> {
     // App is ready
   }
 
-  public async shutdown () {
+  public async shutdown (): Promise<void> {
     // Cleanup, since app is going down
   }
 }

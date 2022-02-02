@@ -3,6 +3,27 @@
     "plugin:adonis/typescriptApp"
   ],
   "rules": {
-    "curly": ["error", "multi", "consistent"]
+    "curly": ["error", "multi", "consistent"],
+    "object-curly-spacing": ["error", "always"],
+    "@typescript-eslint/semi": [2, "always", {"omitLastInOneLineBlock": true}],
+    "@typescript-eslint/member-delimiter-style": ["error", {
+      "multiline": {
+        "delimiter": "semi",
+        "requireLast": true
+      },
+      "singleline": {
+        "delimiter": "semi",
+        "requireLast": false
+      }
+    }],
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/explicit-module-boundary-types": ["error"],
+    "@typescript-eslint/type-annotation-spacing": ["error", {
+      "before": false,
+      "after": true
+    }],
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/space-before-function-paren": ["error", "always"]
   }
 }
