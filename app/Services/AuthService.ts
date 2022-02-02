@@ -12,11 +12,8 @@ import VerifiedSession from './Auth/VerifiedSession'
 import { RepositoryContract } from '@ioc:Adonis/Core/Repository'
 import { inject } from '@adonisjs/fold'
 
-@inject([
-  '@ioc:YouRoutine/Repository/User',
-  '@ioc:YouRoutine/Repository/Code',
-  '@ioc:YouRoutine/Repository/Session',
-])
+import userRepo from '@ioc:YouRoutine/Repository/User'
+
 export default class AuthService {
   private _session?: Session
   private _user?: User
@@ -47,12 +44,6 @@ export default class AuthService {
     return [sessionId, accessToken]
   }
 
-  constructor (
-    protected userRepo: RepositoryContract,
-    protected codeRepo: RepositoryContract,
-    protected sessionRepo: RepositoryContract,
-  ) {}
-
   public get session (): Session | undefined {
     return this._session
   }
@@ -62,7 +53,7 @@ export default class AuthService {
   }
 
   public async register (phone: string): Promise<RegisteredSession> {
-    const user = await this.userRepo.findBy('phone', phone)
+    const user = await userRepo.findBy('phone', phone)
 
     const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString()
     // @TODO здесь нужно инициировать отправку события типа onRegister

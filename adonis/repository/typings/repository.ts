@@ -3,6 +3,7 @@ declare module '@ioc:Adonis/Core/Repository' {
 
   export interface RepositoryContract {
     findById (id: number): object
+    findBy (key: string, value: StrictValues): object
     create(attributes: object): object
   }
 

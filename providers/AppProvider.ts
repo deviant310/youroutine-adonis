@@ -12,12 +12,15 @@ export default class AppProvider {
       return new AuthService()
     })*/
     const { default: LucidRepository } = await import('App/Repositories/LucidRepository')
+
     const { default: User } = await import('App/Models/User')
     const { default: Session } = await import('App/Models/Session')
+    const { default: Verification } = await import('App/Models/Verification')
+
     this.app.container
       .bind('YouRoutine/Repository/User', () => new LucidRepository(User.query()))
-      //.bind('YouRoutine/Repository/Code', () => new LucidRepository(Code.query()))
       .bind('YouRoutine/Repository/Session', () => new LucidRepository(Session.query()))
+      .bind('YouRoutine/Repository/Verification', () => new LucidRepository(Verification.query()))
   }
 
   public async boot () {
