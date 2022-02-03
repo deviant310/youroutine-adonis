@@ -11,117 +11,113 @@ import VerifiedSession from './Auth/VerifiedSession';
 import { RepositoryContract } from '@ioc:Adonis/Core/Repository';
 import { inject } from '@adonisjs/fold';
 
-import { userRepo, verificationRepo } from '@ioc:YouRoutine/Repository';
+import userRepo, { Data as UserData } from '@ioc:YouRoutine/Repository/User';
+import sessionRepo, { Data as SessionData } from '@ioc:YouRoutine/Repository/Session';
+import verificationRepo, { Data as VerificationData } from '@ioc:YouRoutine/Repository/Verification';
+import { DateTime } from 'luxon';
 
 export default class AuthService {
-  private _session?: Session;
-  private _user?: User;
-  private readonly _sessionIdConvertIterationsCount = 6;
+  private _sessionId?: string | number;
   private readonly _accessTokenConvertIterationsCount = 2;
   private readonly _authTokenLength = 60;
-  // @TODO вынести методы в generatePublicAccessToken и parsePublicAccessToken соответственно, сделать их protected методами класса
-  private static encodeSessionId (sessionId: number, iterationsCount: number): string {
-    return [...Array(iterationsCount).keys()]
-      .reduce(str => base64.encode(str), sessionId.toString());
+
+  public async session (): Promise<SessionData | null> {
+    return this._sessionId ? sessionRepo.findById(this._sessionId) : null;
   }
 
-  private static decodeSessionId (sessionId: string, iterationsCount: number): number {
-    return parseInt([...Array(iterationsCount).keys()]
-      .reduce(str => base64.decode(str), sessionId));
+  public async user (): Promise<UserData | null> {
+    const session = await this.session();
+
+    return session ? userRepo.findById(session.userId) : null;
   }
 
-  private static generatePublicAccessToken (sessionId: number, accessToken: string, encodeIterationsCount: number) {
-    const sessionIdEncoded = AuthService.encodeSessionId(sessionId, encodeIterationsCount);
-
-    return [sessionIdEncoded, accessToken].join('.');
-  }
-
-  private static parsePublicAccessToken (publicAccessToken: string, decodeIterationsCount: number): [number, string] {
-    const [sessionIdEncoded, accessToken] = publicAccessToken.split('.');
-    const sessionId = AuthService.decodeSessionId(sessionIdEncoded, decodeIterationsCount);
-
-    return [sessionId, accessToken];
-  }
-
-  public get session (): Session | undefined {
-    return this._session;
-  }
-
-  public get user (): User | undefined {
-    return this._user;
-  }
-
-  public async register (phone: string): Promise<RegisteredSession> {
-    const user = await userRepo.findBy('phone', phone);
-
+  public async createUserVerificationByPhone (phone: string): Promise<VerificationData> {
+    const user = await userRepo.findByOrFail('phone', phone);
     const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString();
-    // @TODO здесь нужно инициировать отправку события типа onRegister
-    //console.log(verificationCode)
-    // @TODO здесь будет задействован репозиторий verificationCodeRepo
     const verification = await verificationRepo
       .create({
         userId: user.id,
-        verificationCode,
+        code: verificationCode,
       });
-    // @TODO убрать encodeSessionId, возвращать только sessionId
-    const sessionIdEncoded = AuthService.encodeSessionId(session.id, this._sessionIdConvertIterationsCount);
 
-    return new RegisteredSession(sessionIdEncoded);
+    // @TODO здесь нужно инициировать отправку события типа onRegister
+    console.log(verification);
+
+    return verification;
   }
 
-  public async verify (sessionIdEncoded: string, verificationCode: string): Promise<VerifiedSession> {
-    const sessionId = AuthService.decodeSessionId(sessionIdEncoded, this._sessionIdConvertIterationsCount);
-    const session = await Session.findOrFail(sessionId);
+  public async createUserSessionByVerification (verificationId: number, verificationCode: string): Promise<SessionData> {
+    const verification = await verificationRepo.findByIdOrFail(verificationId);
 
-    if(!session.verificationCode)
-      throw new Exception('Verification code is empty', 403, 'E_VERIFICATION_CODE_EMPTY');
+    if (verification.expiresAt && new DateTime() > verification.expiresAt)
+      throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED');
 
-    /*if(!session.verificationCode)
-      throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED')*/
+    const codeIsVerified = await Hash.verify(verification.code, verificationCode);
 
-    const codeIsVerified = await Hash.verify(session.verificationCode, verificationCode);
-
-    if (codeIsVerified) {
-      const accessToken = string.generateRandom(this._authTokenLength);
-
-      session.accessToken = accessToken;
-      session.verificationCode = null;
-
-      await session.save();
-
-      const publicAccessToken = AuthService
-        .generatePublicAccessToken(session.id, accessToken, this._accessTokenConvertIterationsCount);
-
-      return new VerifiedSession(publicAccessToken);
-    } else {
+    if (!codeIsVerified)
       throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED');
+
+    await verificationRepo.deleteById(verification.id);
+
+    const session = await sessionRepo.create({
+      userId: verification.userId,
+      accessToken: string.generateRandom(this._authTokenLength),
+    });
+
+    this._sessionId = session.id;
+
+    // @TODO здесь нужно инициировать отправку события типа onVerify
+    console.log(session);
+
+    return session;
+  }
+
+  public async authorizeUserBySession (sessionId: number, sessionAccessToken: string): Promise<void> {
+    const session = await sessionRepo.findByIdOrFail(sessionId);
+
+    if (session.expiresAt && new DateTime() > session.expiresAt)
+      throw new Exception('Session has expired', 403, 'E_SESSION_EXPIRED');
+
+    const sessionAccessTokenHash = createHash('sha256').update(sessionAccessToken).digest('hex');
+
+    if (session.accessToken !== sessionAccessTokenHash)
+      throw new Exception('Invalid access token', 403, 'E_ACCESS_TOKEN_INVALID');
+
+    await this.loginByUserId(session.userId);
+  }
+
+  public async loginByUserId (userId: number): Promise<boolean> {
+    const user = await userRepo.findById(userId);
+
+    if (user) {
+      this._user = user;
+
+      return true;
+    } else {
+      return false;
     }
   }
 
-  public async authorizeByToken (token: string): Promise<void> {
-    const [sessionId, accessToken] = AuthService
-      .parsePublicAccessToken(token, this._accessTokenConvertIterationsCount);
-
-    if (!sessionId || !accessToken)
-      throw new Exception('Error parsing public access token', 403, 'E_ACCESS_TOKEN_PARSE_ERROR');
-
-    this._session = await Session.findOrFail(sessionId);
-
-    if(this._session.accessToken !== createHash('sha256').update(accessToken).digest('hex'))
-      throw new Exception('Wrong access token', 403, 'E_ACCESS_TOKEN_INVALID');
-
-    await this.login(this._session.userId);
-  }
-
-  public async login (id: number) {
-    this._user = await User.findOrFail(id);
-  }
-
-  public async logout () {
-    if(this._session)
+  public async logout (): Promise<void> {
+    /*if (this._session)
       await this._session.delete();
 
     this._session = undefined;
-    this._user = undefined;
+    this._user = undefined;*/
+  }
+
+  private generatePublicAccessToken (sessionId: number, rawAccessToken: string): string {
+    const sessionIdEncoded = [...Array(this._accessTokenConvertIterationsCount).keys()]
+      .reduce(str => base64.encode(str), sessionId.toString());
+
+    return [sessionIdEncoded, rawAccessToken].join('.');
+  }
+
+  private parsePublicAccessToken (publicAccessToken: string): [number, string] {
+    const [sessionIdEncoded, accessToken] = publicAccessToken.split('.');
+    const sessionId = parseInt([...Array(this._accessTokenConvertIterationsCount).keys()]
+      .reduce(str => base64.decode(str), sessionIdEncoded));
+
+    return [sessionId, accessToken];
   }
 }

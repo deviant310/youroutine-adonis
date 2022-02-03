@@ -1,7 +1,6 @@
 import { inject } from '@adonisjs/fold';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
 
-@inject(['@ioc:YouRoutine/Services/Auth'])
 export default class AuthController {
   constructor (auth) {
   }

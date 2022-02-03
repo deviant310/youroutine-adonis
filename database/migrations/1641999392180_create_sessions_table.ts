@@ -1,20 +1,20 @@
-import BaseSchema from '@ioc:Adonis/Lucid/Schema'
+import BaseSchema from '@ioc:Adonis/Lucid/Schema';
 
-export default class Sessions extends BaseSchema {
-  protected tableName = 'sessions'
+export default class CreateSessionsTable extends BaseSchema {
+  protected tableName = 'sessions';
 
-  public async up () {
+  public async up (): Promise<void> {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').primary()
-      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable()
-      table.string('access_token', 64).nullable().unique()
-      table.jsonb('meta').nullable()
-      table.timestamp('expires_at', { useTz: true }).nullable()
-      table.timestamp('created_at', { useTz: true }).notNullable()
-    })
+      table.increments('id').primary();
+      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable();
+      table.string('access_token', 64).notNullable().unique();
+      table.jsonb('meta').nullable();
+      table.timestamp('expires_at', { useTz: true }).nullable();
+      table.timestamp('created_at', { useTz: true }).notNullable();
+    });
   }
 
-  public async down () {
-    this.schema.dropTable(this.tableName)
+  public async down (): Promise<void> {
+    this.schema.dropTable(this.tableName);
   }
 }

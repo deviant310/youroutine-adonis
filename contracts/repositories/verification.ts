@@ -1,14 +1,20 @@
-declare module '@ioc:YouRoutine/Repository' {
-  import LucidRepository from 'App/Repositories/LucidRepository';
+declare module '@ioc:YouRoutine/Repository/Verification' {
+  import LucidRepository, { LucidRepositoryContractTerms } from 'App/Repositories/LucidRepository';
   import Verification from 'App/Models/Verification';
 
-  interface VerificationData {
+  export interface Data {
     id: Verification['id'];
     userId: Verification['userId'];
     code: Verification['code'];
-    expiresAt: Verification['expiresAt'];
+    expiresAt?: Verification['expiresAt'];
     createdAt: Verification['createdAt'];
   }
 
-  export const verificationRepo: LucidRepository<typeof Verification, UserData>;
+  interface Terms extends LucidRepositoryContractTerms {
+    persistedData: Data;
+    newData: Omit<Data, 'id'|'createdAt'>;
+  }
+
+  const verificationRepo: LucidRepository<Terms>;
+  export default verificationRepo;
 }

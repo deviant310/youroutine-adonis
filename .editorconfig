@@ -14,6 +14,9 @@ ij_javascript_use_semicolon_after_statement = false
 ij_javascript_spaces_within_object_literal_braces = true
 ij_any_space_before_method_parentheses = true
 ij_any_keep_indents_on_empty_lines = false
+ij_typescript_blank_lines_around_method_in_interface = unset
+ij_typescript_blank_lines_around_field_in_interface = unset
+ij_any_blank_lines_around_method_in_interface = unset
 
 [*.json]
 insert_final_newline = false

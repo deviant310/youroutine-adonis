@@ -9,13 +9,13 @@ export default class User extends BaseModel {
   public phone!: string;
 
   @column()
-  public name?: string;
+  public name?: string | null;
 
   @column()
-  public surname?: string;
+  public surname?: string | null;
 
   @column()
-  public patronymic?: string;
+  public patronymic?: string | null;
 
   @column.dateTime({ autoCreate: true })
   public createdAt!: DateTime;

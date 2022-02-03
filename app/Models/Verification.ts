@@ -13,7 +13,7 @@ export default class Verification extends BaseModel {
   public code!: string;
 
   @column.dateTime()
-  public expiresAt: DateTime | null = null;
+  public expiresAt?: DateTime | null;
 
   @column.dateTime({ autoCreate: true })
   public createdAt!: DateTime;

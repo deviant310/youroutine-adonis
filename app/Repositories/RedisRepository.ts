@@ -1,15 +1,15 @@
 import { RepositoryContract, StrictValues } from '@ioc:Adonis/Core/Repository';
 
 export default class RedisRepository implements RepositoryContract {
-  create (attributes: object): object {
-    return {};
+  public create (attributes: object): object {
+    return attributes;
   }
 
-  findBy (key: string, value: StrictValues): object {
-    return undefined;
+  public findBy (key: string, value: StrictValues): object {
+    return { key, value };
   }
 
-  findById (id: number): object {
-    return undefined;
+  public findById (id: number): object {
+    return { id };
   }
 }
