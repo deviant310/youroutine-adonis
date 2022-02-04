@@ -1,5 +1,7 @@
 declare module '@ioc:Adonis/Core/Repository' {
-  export interface RepositoryContract {
+  export interface RepositoryContract extends Function {
+    prototype: RepositoryContractImpl;
+
     findById (id: string | number): RepositoryContractTerms['persistedData'] | null;
 
     findByIdOrFail (id: string | number): RepositoryContractTerms['persistedData'];
@@ -9,12 +11,17 @@ declare module '@ioc:Adonis/Core/Repository' {
     findByOrFail (key: string, value: StrictValues): RepositoryContractTerms['persistedData'];
 
     create (attributes: RepositoryContractTerms['newData']): RepositoryContractTerms['persistedData'];
+  }
 
-    deleteById (id: string | number): void;
+  export interface RepositoryContractImpl {
+    attributes: object;
+
+    delete (): void;
+
+    toJSON (): object;
   }
 
   export interface RepositoryContractTerms {
-    storage: object;
     persistedData: object;
     newData: object;
   }

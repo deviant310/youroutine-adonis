@@ -15,12 +15,12 @@ export default class AppProvider {
     /**
      * Register repositories
      */
-    const { LucidRepository } = await import('App/Repositories');
-    const { User, Session, Verification } = await import('App/Models');
+    const { AbstractLucidRepository } = await import('App/Repositories');
+    const { User, Session, Registration } = await import('App/Models');
     this.app.container
-      .bind('YouRoutine/Repository/User', () => new LucidRepository(User))
-      .bind('YouRoutine/Repository/Session', () => new LucidRepository(Session))
-      .bind('YouRoutine/Repository/Verification', () => new LucidRepository(Verification));
+      .bind('YouRoutine/Repository/User', () => new AbstractLucidRepository(User))
+      .bind('YouRoutine/Repository/Session', () => new AbstractLucidRepository(Session))
+      .bind('YouRoutine/Repository/Verification', () => new AbstractLucidRepository(Registration));
   }
 
   public async boot (): Promise<void> {

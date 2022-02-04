@@ -1,2 +1,3 @@
-export { default as LucidRepository } from './LucidRepository';
-export { default as RedisRepository } from './RedisRepository';
+export { default as UserRepository } from './UserRepository';
+export { default as SessionRepository } from './SessionRepository';
+export { default as RegistrationRepository } from './RegistrationRepository';

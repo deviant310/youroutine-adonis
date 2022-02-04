@@ -5,7 +5,12 @@
   "rules": {
     "curly": ["error", "multi", "consistent"],
     "object-curly-spacing": ["error", "always"],
-    "@typescript-eslint/semi": [2, "always", {"omitLastInOneLineBlock": true}],
+    "@typescript-eslint/semi": [2, "always", {
+      "omitLastInOneLineBlock": true
+    }],
+    "max-len": ["error", {
+      "code": 130
+    }],
     "@typescript-eslint/member-delimiter-style": ["error", {
       "multiline": {
         "delimiter": "semi",

@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { BaseModel, beforeSave, column } from '@ioc:Adonis/Lucid/Orm';
 import Hash from '@ioc:Adonis/Core/Hash';
 
-export default class Verification extends BaseModel {
+export default class Registration extends BaseModel {
   @column({ isPrimary: true })
   public id!: number;
 
@@ -10,7 +10,7 @@ export default class Verification extends BaseModel {
   public userId!: number;
 
   @column({ serializeAs: null })
-  public code!: string;
+  public verificationCode!: string;
 
   @column.dateTime()
   public expiresAt?: DateTime | null;
@@ -19,8 +19,8 @@ export default class Verification extends BaseModel {
   public createdAt!: DateTime;
 
   @beforeSave()
-  public static async hashVerificationCode (verification: Verification): Promise<void> {
-    if (verification.$dirty.code)
-      verification.code = await Hash.make(verification.$dirty.code);
+  public static async hashVerificationCode (registration: Registration): Promise<void> {
+    if (registration.$dirty.verificationCode)
+      registration.verificationCode = await Hash.make(registration.$dirty.verificationCode);
   }
 }
