@@ -11,9 +11,12 @@ export default class AppProvider {
     /*this.app.container.singleton('YouRoutine/Auth', () => {
       return new AuthService()
     })*/
+
+    /**
+     * Register repositories
+     */
     const { LucidRepository } = await import('App/Repositories');
     const { User, Session, Verification } = await import('App/Models');
-
     this.app.container
       .bind('YouRoutine/Repository/User', () => new LucidRepository(User))
       .bind('YouRoutine/Repository/Session', () => new LucidRepository(Session))
@@ -26,8 +29,7 @@ export default class AppProvider {
      */
     const Route = this.app.container.use('Adonis/Core/Route');
 
-    Route.get('/', async () => {
-    });
+    Route.get('/', async () => null);
 
     /**
      * Init custom services
