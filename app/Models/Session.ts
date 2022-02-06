@@ -10,10 +10,10 @@ export default class Session extends BaseModel {
   public userId!: number;
 
   @column({ serializeAs: null })
-  public accessToken!: string;
+  public token!: string;
 
   @column()
-  public meta?: object | null;
+  public meta?: string | null;
 
   @column.dateTime()
   public expiresAt?: DateTime | null;
@@ -23,7 +23,7 @@ export default class Session extends BaseModel {
 
   @beforeSave()
   public static async hashAccessToken (session: Session): Promise<void> {
-    if (session.$dirty.accessToken)
-      session.accessToken = createHash('sha256').update(session.$dirty.accessToken).digest('hex');
+    if (session.$dirty.token)
+      session.token = createHash('sha256').update(session.$dirty.token).digest('hex');
   }
 }

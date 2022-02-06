@@ -8,9 +8,7 @@
     "@typescript-eslint/semi": [2, "always", {
       "omitLastInOneLineBlock": true
     }],
-    "max-len": ["error", {
-      "code": 130
-    }],
+    "max-len": "off",
     "@typescript-eslint/member-delimiter-style": ["error", {
       "multiline": {
         "delimiter": "semi",
@@ -23,12 +21,10 @@
     }],
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-namespace": "off",
-    "@typescript-eslint/explicit-module-boundary-types": ["error"],
     "@typescript-eslint/type-annotation-spacing": ["error", {
       "before": false,
       "after": true
     }],
-    "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/space-before-function-paren": ["error", "always"]
   }
 }

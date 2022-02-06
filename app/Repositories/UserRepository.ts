@@ -1,35 +1,23 @@
 import User from 'App/Models/User';
+import { DateTime } from 'luxon';
 
-import AbstractLucidRepository from './AbstractLucidRepository';
+import LucidRepository, { LucidRepositoryTerms } from './LucidRepository';
 
-interface PersistedData {
-  id: User['id'];
-  phone: User['phone'];
-  name?: User['name'];
-  surname?: User['surname'];
-  patronymic?: User['patronymic'];
-  updatedAt: User['updatedAt'];
-  createdAt: User['createdAt'];
+interface PersistedAttributes {
+  id: number;
+  phone: string;
+  name?: string | null;
+  surname?: string | null;
+  patronymic?: string | null;
+  updatedAt: DateTime;
+  createdAt: DateTime;
 }
 
-interface Terms {
-  persistedData: PersistedData;
-  newData: Omit<PersistedData, 'id'|'updatedAt'|'createdAt'>;
+interface Terms extends LucidRepositoryTerms {
+  builder: typeof User;
+  persistedAttributes: PersistedAttributes;
+  fillAttributes: Omit<PersistedAttributes, 'id' | 'updatedAt' | 'createdAt'>;
 }
 
-export default class UserRepository extends AbstractLucidRepository<Terms> {
-  public data = {
-    toJSON (): object {
-      return {
-        id: this.data.id,
-        phone: this.data.phone,
-        name: this.data.name,
-        surname: this.data.surname,
-        patronymic: this.data.patronymic,
-        updated_at: this.data.updatedAt,
-        created_at: this.data.createdAt,
-      };
-    },
-  };
-  protected model = User;
+export default class UserRepository extends LucidRepository<Terms>(User) {
 }

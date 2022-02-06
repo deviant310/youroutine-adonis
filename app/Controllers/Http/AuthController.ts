@@ -1,42 +1,82 @@
-import { inject } from '@adonisjs/fold';
+import { Exception } from '@adonisjs/core/build/standalone';
+import Hash from '@ioc:Adonis/Core/Hash';
+import { string } from '@ioc:Adonis/Core/Helpers';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
-import { string } from '@ioc:Adonis/Core/Helpers'
-import { Data as SessionData } from '@ioc:YouRoutine/Repository/Session'
-import RegistrationData from 'App/Repositories/Registration/RegistrationData'
+import RegistrationRepository from 'App/Repositories/RegistrationRepository';
+import SessionRepository from 'App/Repositories/SessionRepository';
+import UserRepository from 'App/Repositories/UserRepository';
+import faker from 'faker';
+import { DateTime } from 'luxon';
+
+// @TODO В этом контроллере реализуем два метода, register и verify, аутентификацию по токену реализуем в middleware, получение текущего авторизованного пользователя реализуем в AuthProvider
 
 export default class AuthController {
-  constructor (auth) {
-  }
 
-  public async login ({ twoFactorAuth, request }: HttpContextContract) {
-    const email = request.input('email');
-    const password = request.input('password');
+  private readonly _authTokenLength = 60;
+  /*public async login ({ twoFactorAuth, request }: HttpContextContract) {
+    const email = request.input('email')
+    const password = request.input('password')
 
     return await auth.use('api').attempt(email, password, {
       expiresIn: '1mins',
-    });
-  }
+    })
+  }*/
 
-  public async register ({ auth, request }: HttpContextContract) {
+  public async register ({ request }: HttpContextContract) {
     const phone = request.input('phone');
 
-    return auth.register(phone);
+    const user = await UserRepository.findByOrFail('phone', phone);
+
+    const verificationCode = faker
+      .datatype
+      .number({ min: 100000, max: 999999 })
+      .toString();
+
+    const registration = await RegistrationRepository
+      .create({
+        userId: user.attributes.id,
+        verificationCode,
+        expiresAt: new DateTime(),
+      });
+
+    // @TODO здесь нужно инициировать отправку события типа onRegister
+    console.log(registration);
+
+    return registration;
   }
 
-  public async verify ({ auth, request }: HttpContextContract) {
-    const sessionId = request.input('session_id');
+  public async verify ({ request }: HttpContextContract) {
+    const id = request.input('id');
     const verificationCode = request.input('verification_code');
 
-    return auth.verify(sessionId, verificationCode);
-  }
+    const registration = await RegistrationRepository.findByIdOrFail(id);
 
-  public async logout ({ auth }: HttpContextContract) {
+    if (registration.attributes.expiresAt && new DateTime() > registration.attributes.expiresAt)
+      throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED');
+
+    const codeIsVerified = await Hash
+      .verify(registration.attributes.verificationCode, verificationCode);
+
+    if (!codeIsVerified)
+      throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED');
+
+    await registration.delete();
+
+    const session = await SessionRepository.create({
+      userId: registration.attributes.userId,
+      token: string.generateRandom(this._authTokenLength),
+    });
+
+    // @TODO здесь нужно инициировать отправку события типа onVerify
+    console.log(session);
+
+    return session;
+  }
+  // @TODO Необходимо понять где будет производиться проебразование accessToken в publicAccessToken и парсинг в обратную сторону
+  public async logout ({ request }: HttpContextContract) {
+    const token = request.header('Authorization')?.split('Bearer ')?.[1];
     await auth.logout();
   }
-
-  private _sessionId?: string | number;
-  private readonly _accessTokenConvertIterationsCount = 2;
-  private readonly _authTokenLength = 60;
 
   public async session (): Promise<SessionData | null> {
     return this._sessionId ? sessionRepo.findById(this._sessionId) : null;
@@ -46,47 +86,6 @@ export default class AuthController {
     const session = await this.session();
 
     return session ? userRepo.findById(session.userId) : null;
-  }
-
-  public async registerUserByPhone (phone: string): Promise<RegistrationData> {
-    const user = await userRepo.findByOrFail('phone', phone);
-    const verificationCode = faker.datatype.number({ min: 100000, max: 999999 }).toString();
-    const registration = await registrationRepo
-      .create({
-        userId: user.id,
-        code: verificationCode,
-      });
-
-    // @TODO здесь нужно инициировать отправку события типа onRegister
-    console.log(registration);
-
-    return registration;
-  }
-
-  public async verifyUserByRegistrationId (id: number, verificationCode: string): Promise<SessionData> {
-    const registration = await registrationRepo.findByIdOrFail(id);
-
-    if (verification.expiresAt && new DateTime() > verification.expiresAt)
-      throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED');
-
-    const codeIsVerified = await Hash.verify(verification.code, verificationCode);
-
-    if (!codeIsVerified)
-      throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED');
-
-    await verificationRepo.deleteById(verification.id);
-
-    const session = await sessionRepo.create({
-      userId: verification.userId,
-      accessToken: string.generateRandom(this._authTokenLength),
-    });
-
-    this._sessionId = session.id;
-
-    // @TODO здесь нужно инициировать отправку события типа onVerify
-    console.log(session);
-
-    return session;
   }
 
   public async authorizeUserBySession (sessionId: number, sessionAccessToken: string): Promise<void> {
@@ -124,10 +123,7 @@ export default class AuthController {
   }
 
   private generatePublicAccessToken (sessionId: number, rawAccessToken: string): string {
-    const sessionIdEncoded = [...Array(this._accessTokenConvertIterationsCount).keys()]
-      .reduce(str => base64.encode(str), sessionId.toString());
 
-    return [sessionIdEncoded, rawAccessToken].join('.');
   }
 
   private parsePublicAccessToken (publicAccessToken: string): [number, string] {

@@ -15,8 +15,8 @@ export default class AppProvider {
     /**
      * Register repositories
      */
-    const { AbstractLucidRepository } = await import('App/Repositories');
-    const { User, Session, Registration } = await import('App/Models');
+    const { UserRepository } = await import('App/Repositories');
+    //const { User, Session, Registration } = await import('App/Models');
     this.app.container
       .bind('YouRoutine/Repository/User', () => new AbstractLucidRepository(User))
       .bind('YouRoutine/Repository/Session', () => new AbstractLucidRepository(Session))

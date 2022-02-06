@@ -1,30 +1,43 @@
 declare module '@ioc:Adonis/Core/Repository' {
-  export interface RepositoryContract extends Function {
-    prototype: RepositoryContractImpl;
+  export interface RepositoryStatic {
+    new (building: object): Repository;
 
-    findById (id: string | number): RepositoryContractTerms['persistedData'] | null;
+    findById<T extends RepositoryStatic> (this: T, id: string | number): Promise<InstanceType<T> | null>;
 
-    findByIdOrFail (id: string | number): RepositoryContractTerms['persistedData'];
+    findByIdOrFail<T extends RepositoryStatic> (this: T, id: string | number): Promise<InstanceType<T>>;
 
-    findBy (key: string, value: StrictValues): RepositoryContractTerms['persistedData'] | null;
+    findBy<T extends RepositoryStatic> (this: T, key: string, value: RepositoryStrictValues): Promise<InstanceType<T> | null>;
 
-    findByOrFail (key: string, value: StrictValues): RepositoryContractTerms['persistedData'];
+    findByOrFail<T extends RepositoryStatic> (this: T, key: string, value: RepositoryStrictValues): Promise<InstanceType<T>>;
 
-    create (attributes: RepositoryContractTerms['newData']): RepositoryContractTerms['persistedData'];
+    create<T extends RepositoryStatic> (this: T, attributes: object): Promise<InstanceType<T>>;
   }
 
-  export interface RepositoryContractImpl {
+  export interface Repository {
     attributes: object;
 
-    delete (): void;
+    delete (): Promise<void>;
 
     toJSON (): object;
   }
 
-  export interface RepositoryContractTerms {
-    persistedData: object;
-    newData: object;
+  export interface RepositoryTerms {
+    builder: object;
+    persistedAttributes: { [key: string]: unknown };
+    fillAttributes: object;
+    outputAttributes: object;
   }
 
-  export type StrictValues = string | number | boolean | Date | string[] | number[] | Date[] | boolean[] | Buffer;
+  export type RepositoryStrictValues =
+    string
+    | number
+    | boolean
+    | Date
+    | string[]
+    | number[]
+    | Date[]
+    | boolean[]
+    | Buffer
+    | null
+    | undefined;
 }
