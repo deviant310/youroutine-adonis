@@ -1,6 +1,5 @@
-import { BaseModel, column, beforeSave } from '@ioc:Adonis/Lucid/Orm';
+import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm';
 import { DateTime } from 'luxon';
-import { createHash } from 'crypto';
 
 export default class Session extends BaseModel {
   @column({ isPrimary: true })
@@ -20,10 +19,4 @@ export default class Session extends BaseModel {
 
   @column.dateTime({ autoCreate: true })
   public createdAt!: DateTime;
-
-  @beforeSave()
-  public static async hashAccessToken (session: Session): Promise<void> {
-    if (session.$dirty.token)
-      session.token = createHash('sha256').update(session.$dirty.token).digest('hex');
-  }
 }

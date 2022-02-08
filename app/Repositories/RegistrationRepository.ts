@@ -3,18 +3,17 @@ import { DateTime } from 'luxon';
 
 import LucidRepository, { LucidRepositoryTerms } from './LucidRepository';
 
-interface PersistedAttributes {
-  id: number;
+interface Attributes {
+  readonly id: number;
   userId: number;
   verificationCode: string;
   expiresAt?: DateTime | null;
-  createdAt: DateTime;
+  readonly createdAt: DateTime;
 }
 
 interface Terms extends LucidRepositoryTerms {
   builder: typeof Registration;
-  persistedAttributes: PersistedAttributes;
-  //fillAttributes: Omit<PersistedAttributes, 'id' | 'createdAt'>;
+  attributes: Attributes;
 }
 
 export default class RegistrationRepository extends LucidRepository<Terms>(Registration) {}

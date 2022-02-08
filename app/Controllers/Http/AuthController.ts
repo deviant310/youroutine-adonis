@@ -64,13 +64,15 @@ export default class AuthController {
 
     const session = await SessionRepository.create({
       userId: registration.attributes.userId,
-      token: string.generateRandom(this._authTokenLength),
     });
 
     // @TODO здесь нужно инициировать отправку события типа onVerify
     console.log(session);
 
-    return session;
+    return {
+      token: this.bearerToken,
+      ...this.attributes.expiresAt && { expires_at: this.attributes.expiresAt },
+    };
   }
   // @TODO Необходимо понять где будет производиться проебразование accessToken в publicAccessToken и парсинг в обратную сторону
   public async logout ({ request }: HttpContextContract) {

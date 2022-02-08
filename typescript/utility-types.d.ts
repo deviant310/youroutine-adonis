@@ -1,13 +1,7 @@
-type ReadonlyKeys<T> = {[K in keyof T]: T[K]};
+type ReadableKeys<T> = {
+  [K in keyof T]: (<Q>() => Q extends { readonly [X in K]: T[K] } ? 0 : 1) extends (<Q>() => Q extends { [X in K]: T[K] } ? 0 : 1) ? K : never;
+}[keyof T];
 
-type IfEquals<X, Y, A = X, B = never> =
-  (<T>() => T extends X ? 1 : 2) extends
-    (<T>() => T extends Y ? 1 : 2) ? A : B
+type PickReadable<T> = Pick<T, ReadableKeys<T>>;
 
-type RequiredKeys<T> = { [K in keyof T]-?:
-  ({} extends { [P in K]: T[K] } ? never : K)
-}[keyof T]
-
-type OptionalKeys<T> = { [K in keyof T]-?:
-  ({} extends { [P in K]: T[K] } ? K : never)
-}[keyof T]
+type OmitReadable<T> = Omit<T, ReadableKeys<T>>;

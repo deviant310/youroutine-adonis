@@ -23,7 +23,13 @@
     "@typescript-eslint/no-namespace": "off",
     "@typescript-eslint/type-annotation-spacing": ["error", {
       "before": false,
-      "after": true
+      "after": true,
+      "overrides": {
+        "arrow": {
+          "before": true,
+          "after": true
+        }
+      }
     }],
     "@typescript-eslint/space-before-function-paren": ["error", "always"]
   }
