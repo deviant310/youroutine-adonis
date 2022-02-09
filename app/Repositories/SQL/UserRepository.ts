@@ -1,7 +1,7 @@
 import User from 'App/Models/User';
 import { DateTime } from 'luxon';
 
-import LucidRepository, { LucidRepositoryTerms } from './LucidRepository';
+import SQLRepository, { LucidRepositoryTerms } from './LucidRepository';
 
 interface PersistedAttributes {
   id: number;
@@ -19,5 +19,5 @@ interface Terms extends LucidRepositoryTerms {
   fillAttributes: Omit<PersistedAttributes, 'id' | 'updatedAt' | 'createdAt'>;
 }
 
-export default class UserRepository extends LucidRepository<Terms>(User) {
+export default class UserRepository extends SQLRepository<Terms>(User) {
 }

@@ -2,9 +2,9 @@ import { Exception } from '@adonisjs/core/build/standalone';
 import Hash from '@ioc:Adonis/Core/Hash';
 import { string } from '@ioc:Adonis/Core/Helpers';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
-import RegistrationRepository from 'App/Repositories/RegistrationRepository';
-import SessionRepository from 'App/Repositories/SessionRepository';
-import UserRepository from 'App/Repositories/UserRepository';
+import RegistrationRepository from 'App/Repositories/SQL/RegistrationRepository';
+import SessionRepository from 'App/Repositories/SQL/SessionRepository';
+import UserRepository from 'App/Repositories/SQL/UserRepository';
 import faker from 'faker';
 import { DateTime } from 'luxon';
 

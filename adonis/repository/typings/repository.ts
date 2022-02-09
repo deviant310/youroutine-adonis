@@ -1,28 +1,30 @@
 declare module '@ioc:Adonis/Core/Repository' {
-  export interface RepositoryStatic {
-    new (building: object): Repository;
+  export interface IRepository<Data extends IRepositoryData> {
+    getById (id: string | number): Promise<Data> | Promise<null>;
 
-    getById<T extends RepositoryStatic> (this: T, id: string | number): Promise<InstanceType<T> | null>;
+    getFirstOfList<Clause extends IRepositoryDataSamplingClause> (clause: Clause): Promise<Pick<Data, Clause['select'][number]> | null>;
 
-    getByIdOrFail<T extends RepositoryStatic> (this: T, id: string | number): Promise<InstanceType<T>>;
+    getList<Clause extends IRepositoryDataSamplingClause> (clause: Clause): Data[];
 
-    create<T extends RepositoryStatic> (this: T, attributes: object): Promise<InstanceType<T>>;
-  }
+    add (attributes: OmitReadable<IRepositoryStrictData<Data>>): Promise<Data>;
 
-  export interface Repository {
-    attributes: object;
-
-    delete (): Promise<void>;
+    deleteById (id: string | number): Promise<void>;
 
     toJSON (): object;
   }
 
-  export interface RepositoryTerms {
-    builder: object;
-    attributes: object;
+  export interface IRepositoryData {
+    [key: string]: IRepositoryDataValues;
   }
 
-  export type RepositoryStrictValues =
+  export type IRepositoryStrictData<Data extends IRepositoryData> = { [K in keyof Data]: Exclude<Data[K], null | undefined> };
+
+  export interface IRepositoryDataSamplingClause {
+    readonly where: Readonly<IRepositoryData>;
+    readonly select: readonly string[];
+  }
+
+  export type IRepositoryDataValues =
     string
     | number
     | boolean

@@ -1,7 +1,7 @@
 import Registration from 'App/Models/Registration';
 import { DateTime } from 'luxon';
 
-import LucidRepository, { LucidRepositoryTerms } from './LucidRepository';
+import SQLRepository, { LucidRepositoryTerms } from './LucidRepository';
 
 interface Attributes {
   readonly id: number;
@@ -16,4 +16,4 @@ interface Terms extends LucidRepositoryTerms {
   attributes: Attributes;
 }
 
-export default class RegistrationRepository extends LucidRepository<Terms>(Registration) {}
+export default class RegistrationRepository extends SQLRepository<Terms>(Registration) {}

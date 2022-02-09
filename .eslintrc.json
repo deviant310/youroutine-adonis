@@ -31,6 +31,17 @@
         }
       }
     }],
-    "@typescript-eslint/space-before-function-paren": ["error", "always"]
+    "@typescript-eslint/space-before-function-paren": ["error", "always"],
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": ["interface", "typeAlias"],
+        "format": ["PascalCase"],
+        "custom": {
+          "regex": "^I[A-Z]",
+          "match": true
+        }
+      }
+    ]
   }
 }

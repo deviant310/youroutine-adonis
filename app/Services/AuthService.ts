@@ -10,7 +10,7 @@ import VerifiedSession from './Auth/VerifiedSession';
 //import type LucidRepository from 'App/Repositories/LucidRepository'
 import { RepositoryContract } from '@ioc:Adonis/Core/Repository';
 import { inject } from '@adonisjs/fold';
-import UserRepository from 'App/Repositories/UserRepository'
+import UserRepository from 'App/Repositories/SQL/UserRepository'
 import sessionRepo, { Data as SessionData } from '@ioc:YouRoutine/Repository/Session';
 import verificationRepo, { Data as VerificationData } from '@ioc:YouRoutine/Repository/Verification';
 import { DateTime } from 'luxon';
