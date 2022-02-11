@@ -5,6 +5,15 @@ import { DateTime } from 'luxon';
 
 import SQLRepository, { LucidRepositoryTerms } from './LucidRepository';
 
+interface ISessionDTO {
+  readonly id: number;
+  userId: number;
+  readonly token: string;
+  meta?: string | null;
+  expiresAt?: DateTime | null;
+  readonly createdAt: DateTime | null;
+}
+
 export default class SessionRepository extends SQLRepository(Session) {
   private static readonly _sessionIdConvertIterationsCount = 2;
   private static readonly _tokenLength = 60;
@@ -17,13 +26,6 @@ export default class SessionRepository extends SQLRepository(Session) {
 
     return new this(building) as InstanceType<T>;
   }
-
-  public readonly id!: number;
-  public userId!: number;
-  public readonly token: string;
-  public meta?: string | null;
-  public expiresAt?: DateTime | null;
-  public readonly createdAt!: DateTime | null;
 
   constructor () {
     super();

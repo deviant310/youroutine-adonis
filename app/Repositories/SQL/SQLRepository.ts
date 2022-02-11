@@ -36,7 +36,6 @@ export default abstract class SQLRepository<Data extends IRepositoryData> implem
     return new this(building) as InstanceType<T>;
   }
 
-  // @TODO реализовать сохранение передаваемых атрибутов в свойство объекта в качестве "грязных" атрибутов
   public static async create<T extends typeof LucidRepository> (this: T, attributes: OmitReadable<Terms['attributes']>) {
     // @TODO здесь необходимо вызывать декоратор атрибутов
     const repo: LucidRepository = Reflect.construct(this, []);
@@ -64,7 +63,9 @@ export default abstract class SQLRepository<Data extends IRepositoryData> implem
   }
 
   public add (attributes: OmitReadable<RepositoryStrictData<Data>>): Promise<Data> {
-    return Promise.resolve(undefined);
+    return this.db
+      .table(this.table)
+      .insert(attributes)
   }
 
   public deleteById (id: string | number): Promise<void> {

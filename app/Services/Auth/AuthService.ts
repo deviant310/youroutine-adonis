@@ -5,8 +5,8 @@ import Hash from '@ioc:Adonis/Core/Hash';
 import { base64, string } from '@ioc:Adonis/Core/Helpers';
 import User from 'App/Models/User';
 import Session from 'App/Models/Session';
-import RegisteredSession from './Auth/RegisteredSession';
-import VerifiedSession from './Auth/VerifiedSession';
+import RegisteredSession from './RegisteredSession';
+import VerifiedSession from './VerifiedSession';
 //import type LucidRepository from 'App/Repositories/LucidRepository'
 import { RepositoryContract } from '@ioc:Adonis/Core/Repository';
 import { inject } from '@adonisjs/fold';
