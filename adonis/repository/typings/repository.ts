@@ -1,26 +1,22 @@
 declare module '@ioc:Adonis/Core/Repository' {
-  export interface IRepository<Data extends IRepositoryData> {
-    getById (id: string | number): Promise<Data> | Promise<null>;
+  export interface IRepository<Data> {
+    getById (id: string | number): Promise<Data | null>;
 
-    getFirstOfList<Clause extends IRepositoryDataSamplingClause> (clause: Clause): Promise<Pick<Data, Clause['select'][number]> | null>;
+    getFirstOfList<Clause extends IRepositoryDataSamplingClause<Data>> (clause: Clause): Promise<IRepositoryPluckedData<Data, Clause> | null>;
 
-    getList<Clause extends IRepositoryDataSamplingClause> (clause: Clause): Data[];
+    getList<Clause extends IRepositoryDataSamplingClause<Data>> (clause: Clause): Promise<IRepositoryPluckedData<Data, Clause>[] | never[]>;
 
     add (attributes: OmitReadable<IRepositoryStrictData<Data>>): Promise<Data>;
 
     deleteById (id: string | number): Promise<void>;
-
-    toJSON (): object;
   }
 
-  export interface IRepositoryData {
-    [key: string]: IRepositoryDataValues;
-  }
+  export type IRepositoryPluckedData<Data, Clause extends IRepositoryDataSamplingClause<Data>> = Pick<Data, Clause['select'][number] extends keyof Data ? Clause['select'][number] : never>;
 
-  export type IRepositoryStrictData<Data extends IRepositoryData> = { [K in keyof Data]: Exclude<Data[K], null | undefined> };
+  export type IRepositoryStrictData<Data> = { [K in keyof Data]: Exclude<Data[K], null | undefined> };
 
-  export interface IRepositoryDataSamplingClause {
-    readonly where: Readonly<IRepositoryData>;
+  export interface IRepositoryDataSamplingClause<Data> {
+    readonly where: Readonly<Data>;
     readonly select: readonly string[];
   }
 

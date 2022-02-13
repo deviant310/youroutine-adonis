@@ -1,78 +1,46 @@
 import {
   IRepository,
-  IRepositoryData,
-  IRepositoryStrictData,
   IRepositoryDataSamplingClause,
+  IRepositoryPluckedData,
+  IRepositoryStrictData,
 } from '@ioc:Adonis/Core/Repository';
-import { LucidModel, LucidRow } from '@ioc:Adonis/Lucid/Orm';
 
 import Database from '@ioc:Adonis/Lucid/Database';
 
-export default abstract class SQLRepository<Data extends IRepositoryData> implements IRepository<Data> {
+export default abstract class SQLRepository<Data> implements IRepository<Data> {
   protected db = Database;
   protected abstract table: string;
 
-  public static async getById<T extends typeof LucidRepository> (this: T, id: string | number) {
-    const building = await builder.find(id);
-
-    return building ? new this(building) as InstanceType<T> : null;
-  }
-
-  public static async getByIdOrFail<T extends typeof LucidRepository> (this: T, id: string | number) {
-    const building = await builder.findOrFail(id);
-
-    return new this(building) as InstanceType<T>;
-  }
-
-  public static async getBy<T extends typeof LucidRepository> (this: T, key: string, value: RepositoryStrictValues) {
-    const building = await builder.findBy(key, value);
-
-    return building ? new this(building) as InstanceType<T> : null;
-  }
-
-  public static async getByOrFail<T extends typeof LucidRepository> (this: T, key: string, value: RepositoryStrictValues) {
-    const building = await builder.findByOrFail(key, value);
-
-    return new this(building) as InstanceType<T>;
-  }
-
-  public static async create<T extends typeof LucidRepository> (this: T, attributes: OmitReadable<Terms['attributes']>) {
-    // @TODO здесь необходимо вызывать декоратор атрибутов
-    const repo: LucidRepository = Reflect.construct(this, []);
-    builder.cre;
-    const building = await builder.create(attributes as {});
-
-    Reflect.defineProperty(repo, 'property1', { value: 42 });
-
-    return repo as InstanceType<T>;
-  }
-
-  public getById (id: string | number) {
-    return this.db
+  public async getById (id: string | number): Promise<Data | null> {
+    return await this.db
       .from(this.table)
       .where('id', id)
-      .first() as Promise<Data>;
+      .first();
   }
 
-  public getFirstOfList<Clause extends SamplingClause> (clause: Clause): Promise<Pick<Data, Clause['select'][number]> | null> {
-    return Promise.resolve(undefined);
+  public async getFirstOfList<Clause extends IRepositoryDataSamplingClause<Data>> ({ select, where }: Clause): Promise<IRepositoryPluckedData<Data, Clause> | null> {
+    return await this.db
+      .from(this.table)
+      .select(select as string[])
+      .where(where)
+      .first();
   }
 
-  public getList<Clause extends SamplingClause> (clause: Clause): Data[] {
+  public async getList<Clause extends IRepositoryDataSamplingClause<Data>> ({}: Clause): Promise<IRepositoryPluckedData<Data, Clause>[] | never[]> {
     return [];
   }
 
-  public add (attributes: OmitReadable<RepositoryStrictData<Data>>): Promise<Data> {
-    return this.db
+  public async add (attributes: OmitReadable<IRepositoryStrictData<Data>>): Promise<Data> {
+    return await this.db
       .table(this.table)
       .insert(attributes)
+      .exec();
   }
 
-  public deleteById (id: string | number): Promise<void> {
-    return Promise.resolve(undefined);
-  }
-
-  public toJSON (): object {
-    return this.building.toJSON();
+  public async deleteById (id: string | number): Promise<void> {
+    await this.db
+      .from(this.table)
+      .where('id', id)
+      .delete();
   }
 }
