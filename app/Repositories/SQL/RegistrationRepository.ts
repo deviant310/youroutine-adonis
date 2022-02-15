@@ -1,19 +1,6 @@
 import Registration from 'App/Models/Registration';
-import { DateTime } from 'luxon';
+import SQLRepository from './SQLRepository';
 
-import SQLRepository, { LucidRepositoryTerms } from './LucidRepository';
-
-interface Attributes {
-  readonly id: number;
-  userId: number;
-  verificationCode: string;
-  expiresAt?: DateTime | null;
-  readonly createdAt: DateTime;
+export default class RegistrationRepository extends SQLRepository<Registration> {
+  public table = 'registrations';
 }
-
-interface Terms extends LucidRepositoryTerms {
-  builder: typeof Registration;
-  attributes: Attributes;
-}
-
-export default class RegistrationRepository extends SQLRepository<Terms>(Registration) {}

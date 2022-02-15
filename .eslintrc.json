@@ -19,7 +19,7 @@
         "requireLast": false
       }
     }],
-    "@typescript-eslint/explicit-module-boundary-types": ["error"],
+    //"@typescript-eslint/explicit-module-boundary-types": ["error"],
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-namespace": "off",
     "@typescript-eslint/type-annotation-spacing": ["error", {
@@ -32,17 +32,6 @@
         }
       }
     }],
-    "@typescript-eslint/space-before-function-paren": ["error", "always"],
-    "@typescript-eslint/naming-convention": [
-      "error",
-      {
-        "selector": ["interface", "typeAlias"],
-        "format": ["PascalCase"],
-        "custom": {
-          "regex": "^I[A-Z]",
-          "match": true
-        }
-      }
-    ]
+    "@typescript-eslint/space-before-function-paren": ["error", "always"]
   }
 }

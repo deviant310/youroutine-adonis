@@ -1,30 +1,43 @@
+import { base64 } from '@ioc:Adonis/Core/Helpers';
 import BaseModel from 'App/Models/BaseModel';
+import { createHash } from 'crypto';
 
-type ISessionData = {
-  id: number;
-  userId: number;
-  token: string;
-  meta?: string | null;
-  expiresAt?: Date | null;
-  createdAt: Date;
-};
+export enum SessionTokenType {
+  Bearer = 'bearer'
+}
 
-export default class Session extends BaseModel {
-  public readonly id: number;
-  public userId: number;
-  public token: string;
+export default class Session extends BaseModel<Session> {
+  private static readonly _uuidConvertIterationsCount = 2;
+
+  public static getAttributesByPublicToken (publicToken: string) {
+    const [idEncoded, token] = publicToken.split('.');
+
+    const id = parseInt([...Array(Session._uuidConvertIterationsCount).keys()]
+      .reduce(str => base64.decode(str), idEncoded));
+
+    return { id, token } as Readonly<Pick<Session, 'id'|'token'>>;
+  }
+
+  public readonly id!: number;
+  public userId!: number;
+  public token!: string;
+  public tokenType!: SessionTokenType;
   public meta?: string | null;
   public expiresAt?: Date | null;
-  public readonly createdAt: Date;
+  public readonly createdAt!: Date;
 
-  constructor ({ id, userId, token, meta, expiresAt, createdAt }: ISessionData) {
-    super();
+  public getTokenHash (): string {
+    return createHash('sha256').update(this.token).digest('hex');
+  }
 
-    this.id = id;
-    this.userId = userId;
-    this.token = token;
-    this.meta = meta;
-    this.expiresAt = expiresAt;
-    this.createdAt = createdAt;
+  public getTokenPublic (): string {
+    switch (this.tokenType) {
+      case SessionTokenType.Bearer:
+      default:
+        const idEncoded = [...Array(Session._uuidConvertIterationsCount).keys()]
+          .reduce(str => base64.encode(str), this.id.toString());
+
+        return [idEncoded, this.token].join('.');
+    }
   }
 }

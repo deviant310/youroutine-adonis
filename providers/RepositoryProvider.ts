@@ -7,13 +7,19 @@ export default class AppProvider {
   }
 
   public async register (): Promise<void> {
-    // App is registered
+    const Repositories = await import('App/Repositories');
+
+    this.app.container.singleton('YouRoutine/Repositories', () => {
+      return Object.entries(Repositories).reduce((obj: { [key: string]: unknown }, [key, Repository]) => {
+        obj[key as string] = new Repository();
+
+        return obj;
+      }, {}) as { [K in keyof typeof Repositories]: InstanceType<typeof Repositories[K]> };
+    });
   }
 
   public async boot (): Promise<void> {
-    const Route = this.app.container.use('Adonis/Core/Route');
-
-    Route.get('/', async () => null);
+    // App is booted
   }
 
   public async ready (): Promise<void> {

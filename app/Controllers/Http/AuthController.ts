@@ -2,30 +2,23 @@ import { Exception } from '@adonisjs/core/build/standalone';
 import Hash from '@ioc:Adonis/Core/Hash';
 import { string } from '@ioc:Adonis/Core/Helpers';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
-import RegistrationRepository from 'App/Repositories/SQL/RegistrationRepository';
-import SessionRepository from 'App/Repositories/SQL/SessionRepository';
-import UserRepository from 'App/Repositories/SQL/UserRepository';
+//import RegistrationRepository from 'App/Repositories/SQL/RegistrationRepository';
+//import SessionRepository from 'App/Repositories/SQL/SessionRepository';
+//import UserRepository from 'App/Repositories/SQL/UserRepository';
 import faker from 'faker';
 import { DateTime } from 'luxon';
+
+import Repositories from '@ioc:YouRoutine/Repositories';
+
+const { UserRepository } = Repositories;
 
 // @TODO В этом контроллере реализуем два метода, register и verify, аутентификацию по токену реализуем в middleware, получение текущего авторизованного пользователя реализуем в AuthProvider
 
 export default class AuthController {
-
-  private readonly _authTokenLength = 60;
-  /*public async login ({ twoFactorAuth, request }: HttpContextContract) {
-    const email = request.input('email')
-    const password = request.input('password')
-
-    return await auth.use('api').attempt(email, password, {
-      expiresIn: '1mins',
-    })
-  }*/
-
   public async register ({ request }: HttpContextContract) {
     const phone = request.input('phone');
 
-    const user = await UserRepository.findByOrFail('phone', phone);
+    const user = await UserRepository.getById('phone', phone);
 
     const verificationCode = faker
       .datatype

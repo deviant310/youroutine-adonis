@@ -18,5 +18,5 @@
 |
 */
 
-import './routes/auth'
-import './routes/user'
+import './routes/auth';
+import './routes/user';
