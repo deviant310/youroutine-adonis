@@ -20,12 +20,11 @@ export default class AuthController {
       where: { phone },
     });
 
-    const registration = await RegistrationRepository
-      .add({
-        userId: user.id,
-        verificationCode: generateVerificationCode(),
-        expiresAt: new Date(),
-      });
+    const registration = await RegistrationRepository.add({
+      userId: user.id,
+      verificationCode: generateVerificationCode(),
+      expiresAt: new Date(),
+    });
 
     // @TODO здесь нужно инициировать отправку события типа onRegister
     console.log(registration);

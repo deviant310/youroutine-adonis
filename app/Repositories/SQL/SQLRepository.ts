@@ -1,10 +1,10 @@
 import { Exception } from '@adonisjs/core/build/standalone';
 import {
   Repository,
-  RepositoryDataSamplingClause,
-  RepositoryPluckedData,
+  RepositoryDataProviderPlucked,
+  RepositoryDataProviderAddAttributes,
+  RepositorySamplingClause,
   RepositoryRawData,
-  RepositoryStrictData,
 } from '@ioc:Adonis/Core/Repository';
 import Database from '@ioc:Adonis/Lucid/Database';
 
@@ -32,7 +32,7 @@ export default abstract class SQLRepository<DataProvider> implements Repository<
     return item;
   }
 
-  public async getFirstOfList<Clause extends RepositoryDataSamplingClause<DataProvider>> ({ select, where }: Clause): Promise<RepositoryPluckedData<DataProvider, Clause> | null> {
+  public async getFirstOfList<Clause extends RepositorySamplingClause<DataProvider>> ({ select, where }: Clause): Promise<RepositoryDataProviderPlucked<DataProvider, Clause> | null> {
     return await this.db
       .from(this.table)
       .select(select as string[])
@@ -40,7 +40,7 @@ export default abstract class SQLRepository<DataProvider> implements Repository<
       .first();
   }
 
-  public async getFirstOfListOrFail<Clause extends RepositoryDataSamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryPluckedData<DataProvider, Clause>> {
+  public async getFirstOfListOrFail<Clause extends RepositorySamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryDataProviderPlucked<DataProvider, Clause>> {
     const item = await this.getFirstOfList(clause);
 
     if (item === null)
@@ -49,11 +49,11 @@ export default abstract class SQLRepository<DataProvider> implements Repository<
     return item;
   }
 
-  public async getList<Clause extends RepositoryDataSamplingClause<DataProvider>> ({}: Clause): Promise<RepositoryPluckedData<DataProvider, Clause>[] | never[]> {
+  public async getList<Clause extends RepositorySamplingClause<DataProvider>> ({}: Clause): Promise<RepositoryDataProviderPlucked<DataProvider, Clause>[] | never[]> {
     return [];
   }
 
-  public async add (attributes: OmitReadable<RepositoryStrictData<DataProvider>>): Promise<DataProvider> {
+  public async add (attributes: RepositoryDataProviderAddAttributes<DataProvider>): Promise<DataProvider> {
     return await this.db
       .table(this.table)
       .insert(attributes)

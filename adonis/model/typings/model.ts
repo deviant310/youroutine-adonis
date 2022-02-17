@@ -3,9 +3,9 @@ declare module '@ioc:Adonis/Core/Model' {
     toJSON (): { [key: string]: ModelDataValues };
   };
 
-  export type ModelData<Data> = Pick<Data, {
-    [K in keyof Data]: Data[K] extends Function ? never : Data[K] extends ModelDataValues ? K : never;
-  }[keyof Data]>;
+  export type ModelProperties<ModelInstance> = Pick<ModelInstance, {
+    [K in keyof ModelInstance]: ModelInstance[K] extends Function ? never : ModelInstance[K] extends ModelDataValues ? K : never;
+  }[keyof ModelInstance]>;
 
   export type ModelDataValues =
     string
