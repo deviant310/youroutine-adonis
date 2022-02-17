@@ -1,35 +1,30 @@
 import { Exception } from '@adonisjs/core/build/standalone';
 import Hash from '@ioc:Adonis/Core/Hash';
-import { string } from '@ioc:Adonis/Core/Helpers';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
-//import RegistrationRepository from 'App/Repositories/SQL/RegistrationRepository';
-//import SessionRepository from 'App/Repositories/SQL/SessionRepository';
-//import UserRepository from 'App/Repositories/SQL/UserRepository';
-import faker from 'faker';
+import { generateVerificationCode } from 'App/Helpers/Generator';
+import type Registration from 'App/Models/Registration';
+import type Session from 'App/Models/Session';
 import { DateTime } from 'luxon';
-
 import Repositories from '@ioc:YouRoutine/Repositories';
 
-const { UserRepository } = Repositories;
+const { UserRepository, RegistrationRepository } = Repositories;
 
 // @TODO В этом контроллере реализуем два метода, register и verify, аутентификацию по токену реализуем в middleware, получение текущего авторизованного пользователя реализуем в AuthProvider
 
 export default class AuthController {
-  public async register ({ request }: HttpContextContract) {
-    const phone = request.input('phone');
+  public async register ({ request }: HttpContextContract): Promise<Registration> {
+    const phone: string = request.input('phone');
 
-    const user = await UserRepository.getById('phone', phone);
-
-    const verificationCode = faker
-      .datatype
-      .number({ min: 100000, max: 999999 })
-      .toString();
+    const user = await UserRepository.getFirstOfListOrFail({
+      select: ['id'] as const,
+      where: { phone },
+    });
 
     const registration = await RegistrationRepository
-      .create({
-        userId: user.attributes.id,
-        verificationCode,
-        expiresAt: new DateTime(),
+      .add({
+        userId: user.id,
+        verificationCode: generateVerificationCode(),
+        expiresAt: new Date(),
       });
 
     // @TODO здесь нужно инициировать отправку события типа onRegister
@@ -38,13 +33,13 @@ export default class AuthController {
     return registration;
   }
 
-  public async verify ({ request }: HttpContextContract) {
+  public async verify ({ request }: HttpContextContract): Promise<Session> {
     const id = request.input('id');
     const verificationCode = request.input('verification_code');
 
-    const registration = await RegistrationRepository.findByIdOrFail(id);
+    const registration = await RegistrationRepository.getByIdOrFail(id);
 
-    if (registration.attributes.expiresAt && new DateTime() > registration.attributes.expiresAt)
+    if (registration.expiresAt && new Date() > registration.expiresAt)
       throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED');
 
     const codeIsVerified = await Hash

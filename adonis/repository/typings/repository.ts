@@ -1,12 +1,16 @@
 declare module '@ioc:Adonis/Core/Repository' {
-  export interface Repository<Data> {
-    getById (id: string | number): Promise<Data | null>;
+  export interface Repository<DataProvider> {
+    getById (id: string | number): Promise<DataProvider | null>;
 
-    getFirstOfList<Clause extends RepositoryDataSamplingClause<Data>> (clause: Clause): Promise<RepositoryPluckedData<Data, Clause> | null>;
+    getByIdOrFail (id: string | number): Promise<DataProvider>;
 
-    getList<Clause extends RepositoryDataSamplingClause<Data>> (clause: Clause): Promise<RepositoryPluckedData<Data, Clause>[] | never[]>;
+    getFirstOfList<Clause extends RepositoryDataSamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryPluckedData<DataProvider, Clause> | null>;
 
-    add (attributes: OmitReadable<RepositoryStrictData<Data>>): Promise<Data>;
+    getFirstOfListOrFail<Clause extends RepositoryDataSamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryPluckedData<DataProvider, Clause>>;
+
+    getList<Clause extends RepositoryDataSamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryPluckedData<DataProvider, Clause>[] | never[]>;
+
+    add (attributes: OmitReadable<RepositoryDataProviderProperties<DataProvider>>): Promise<DataProvider>;
 
     deleteById (id: string | number): Promise<void>;
   }
@@ -17,11 +21,15 @@ declare module '@ioc:Adonis/Core/Repository' {
 
   export type RepositoryPluckedData<Data, Clause extends RepositoryDataSamplingClause<Data>> = Pick<Data, Clause['select'][number] extends keyof Data ? Clause['select'][number] : never>;
 
-  export type RepositoryStrictData<Data> = { [K in keyof Data]: Exclude<Data[K], null | undefined> };
+  export type RepositoryDataProviderProperties<Data> = Pick<Data, { [K in keyof Data]: Data[K] extends Function ? never : K }[keyof Data]>;
 
   export interface RepositoryDataSamplingClause<Data> {
-    readonly where: Readonly<Data>;
+    readonly where: Readonly<Partial<Data>>;
     readonly select: readonly string[];
+  }
+
+  export interface RepositoryRawData {
+    [key: string]: RepositoryDataValues;
   }
 
   export type RepositoryDataValues =

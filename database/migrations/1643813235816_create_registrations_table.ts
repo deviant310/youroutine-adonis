@@ -8,8 +8,7 @@ export default class CreateRegistrationsTable extends BaseSchema {
       table.increments('id');
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable();
       table.string('verification_code', 180).notNullable();
-      table.timestamp('expires_at', { useTz: true }).nullable();
-      table.timestamp('created_at', { useTz: true }).notNullable();
+      table.timestamps(true, true);
     });
   }
 

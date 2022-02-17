@@ -10,8 +10,7 @@ export default class CreateUsersTable extends BaseSchema {
       table.string('name').nullable();
       table.string('surname').nullable();
       table.string('patronymic').nullable();
-      table.timestamp('created_at', { useTz: true }).notNullable();
-      table.timestamp('updated_at', { useTz: true }).notNullable();
+      table.timestamps(true, true);
     });
   }
 

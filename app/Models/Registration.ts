@@ -5,10 +5,10 @@ export default class Registration extends BaseModel<Registration> {
   public readonly id!: number;
   public userId!: number;
   public verificationCode!: string;
-  public expiresAt?: Date | null;
+  public expiresAt!: Date | null;
   public readonly createdAt!: Date;
 
-  public async getVerificationCodeHash () {
+  public async getVerificationCodeHash (): Promise<string> {
     return await Hash.make(this.verificationCode);
   }
 }
