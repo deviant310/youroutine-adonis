@@ -17,6 +17,5 @@ declare module '@ioc:Adonis/Core/Model' {
     | Date[]
     | boolean[]
     | Buffer
-    | null
-    | undefined;
+    | null;
 }

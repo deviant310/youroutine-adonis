@@ -9,29 +9,30 @@ export enum SessionTokenType {
 export default class Session extends BaseModel<Session> {
   private static readonly _uuidConvertIterationsCount = 2;
 
-  public static getAttributesByPublicToken (publicToken: string): Readonly<Pick<Session, 'id'|'tokenRaw'>> {
-    const [idEncoded, tokenRaw] = publicToken.split('.');
+  public static parsePublicToken (publicToken: string): Readonly<[number, string]> {
+    const [idEncoded, token] = publicToken.split('.');
 
     const id = parseInt([...Array(Session._uuidConvertIterationsCount).keys()]
       .reduce(str => base64.decode(str), idEncoded));
 
-    return { id, tokenRaw };
+    return [id, token];
+  }
+
+  public static makeTokenHash (token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   public readonly id!: number;
   public userId!: number;
-  public tokenRaw?: string;
+  public tokenHash!: string;
   public tokenType!: SessionTokenType;
-  public meta?: string | null;
-  public expiresAt?: Date | null;
+  public meta!: string | null;
+  public expiresAt!: Date | null;
+  public readonly updatedAt!: Date;
   public readonly createdAt!: Date;
 
-  public getTokenHash (): string | null {
-    return this.tokenRaw ? createHash('sha256').update(this.tokenRaw).digest('hex') : null;
-  }
-
   public getTokenPublic (): string | null {
-    if(!this.tokenRaw) return null;
+    if (!this.tokenRaw) return null;
 
     switch (this.tokenType) {
       case SessionTokenType.Bearer:

@@ -1,15 +1,15 @@
-import Hash from '@ioc:Adonis/Core/Hash';
 import BaseModel from 'App/Models/BaseModel';
 
 export default class Registration extends BaseModel<Registration> {
   public readonly id!: number;
   public userId!: number;
-  public verificationCode!: string;
+  public verificationCodeHash!: string;
   public expiresAt!: Date | null;
+  public readonly updatedAt!: Date;
   public readonly createdAt!: Date;
 
-  public async getVerificationCodeHash (): Promise<string> {
-    return await Hash.make(this.verificationCode);
+  public isExpired (): boolean {
+    return this.expiresAt ? new Date() > this.expiresAt : false;
   }
 }
 

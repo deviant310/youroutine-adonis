@@ -1,13 +1,15 @@
 import { Exception } from '@adonisjs/core/build/standalone';
-import Hash from '@ioc:Adonis/Core/Hash';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
-import { generateVerificationCode } from 'App/Helpers/Generator';
-import type Registration from 'App/Models/Registration';
-import type Session from 'App/Models/Session';
-import { DateTime } from 'luxon';
 import Repositories from '@ioc:YouRoutine/Repositories';
+import { generateAccessToken, generateVerificationCode } from 'App/Helpers/Generators';
+import Registration from 'App/Models/Registration';
+import Session, { SessionTokenType } from 'App/Models/Session';
+import Token from 'App/Models/Token';
+import VerificationCode from 'App/Models/VerificationCode';
+import { createHash } from 'crypto';
+import { DateTime } from 'luxon';
 
-const { UserRepository, RegistrationRepository } = Repositories;
+const { userRepository, sessionRepository, registrationRepository } = Repositories;
 
 // @TODO В этом контроллере реализуем два метода, register и verify, аутентификацию по токену реализуем в middleware, получение текущего авторизованного пользователя реализуем в AuthProvider
 
@@ -15,52 +17,57 @@ export default class AuthController {
   public async register ({ request }: HttpContextContract): Promise<Registration> {
     const phone: string = request.input('phone');
 
-    const user = await UserRepository.getFirstOfListOrFail({
-      select: ['id'] as const,
-      where: { phone },
-    });
+    const user = await userRepository
+      .getFirstOfListOrFail({
+        select: ['id'] as const,
+        where: { phone },
+      });
 
-    const registration = await RegistrationRepository.add({
-      userId: user.id,
-      verificationCode: generateVerificationCode(),
-      expiresAt: new Date(),
-    });
+    const verificationCode = new VerificationCode({ value: generateVerificationCode() });
+
+    const registration = await registrationRepository
+      .add({
+        userId: user.id,
+        verificationCodeHash: await verificationCode.getHashedValue(),
+        expiresAt: null,
+      });
 
     // @TODO здесь нужно инициировать отправку события типа onRegister
-    console.log(registration);
+    console.log(registration, verificationCode);
 
     return registration;
   }
 
-  public async verify ({ request }: HttpContextContract): Promise<Session> {
+  public async verify ({ request }: HttpContextContract): Promise<Token> {
     const id = request.input('id');
     const verificationCode = request.input('verification_code');
 
-    const registration = await RegistrationRepository.getByIdOrFail(id);
+    const registration = await registrationRepository.getByIdOrFail(id);
 
-    if (registration.expiresAt && new Date() > registration.expiresAt)
+    if (registration.isExpired())
       throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED');
 
-    const codeIsVerified = await Hash
-      .verify(registration.attributes.verificationCode, verificationCode);
-
-    if (!codeIsVerified)
+    if (!(await registration.verify(verificationCode)))
       throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED');
 
-    await registration.delete();
+    await registrationRepository.deleteById(registration.id);
 
-    const session = await SessionRepository.create({
-      userId: registration.attributes.userId,
+    const token = new Token({ value: generateAccessToken() });
+
+    const session = await sessionRepository.add({
+      userId: registration.userId,
+      tokenHash: Session.makeTokenHash(token.value),
+      tokenType: SessionTokenType.Bearer,
+      meta: null,
+      expiresAt: null,
     });
 
     // @TODO здесь нужно инициировать отправку события типа onVerify
-    console.log(session);
+    console.log(session, token);
 
-    return {
-      token: this.bearerToken,
-      ...this.attributes.expiresAt && { expires_at: this.attributes.expiresAt },
-    };
+    return token;
   }
+
   // @TODO Необходимо понять где будет производиться проебразование accessToken в publicAccessToken и парсинг в обратную сторону
   public async logout ({ request }: HttpContextContract) {
     const token = request.header('Authorization')?.split('Bearer ')?.[1];

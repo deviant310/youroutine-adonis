@@ -1,39 +1,46 @@
 declare module '@ioc:Adonis/Core/Repository' {
-  export interface Repository<DataProvider> {
-    getById (id: string | number): Promise<DataProvider | null>;
+  import { CamelCase, SnakeCase } from 'type-fest';
 
-    getByIdOrFail (id: string | number): Promise<DataProvider>;
+  export interface Repository<Provider> {
+    getById (id: string | number): Promise<Provider | null>;
 
-    getFirstOfList<Clause extends RepositorySamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryDataProviderPlucked<DataProvider, Clause> | null>;
+    getByIdOrFail (id: string | number): Promise<Provider>;
 
-    getFirstOfListOrFail<Clause extends RepositorySamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryDataProviderPlucked<DataProvider, Clause>>;
+    getFirstOfList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause> | null>;
 
-    getList<Clause extends RepositorySamplingClause<DataProvider>> (clause: Clause): Promise<RepositoryDataProviderPlucked<DataProvider, Clause>[] | never[]>;
+    getFirstOfListOrFail<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>>;
 
-    add (attributes: RepositoryDataProviderAddAttributes<DataProvider>): Promise<DataProvider>;
+    getList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>[] | never[]>;
+
+    createFromAttributes (attributes: RepositoryProviderAddAttributes<Provider>): Promise<Provider>;
+
+    updateById (id: string | number, attributes: RepositoryProviderUpdateAttributes<Provider>): Promise<Provider>;
 
     deleteById (id: string | number): Promise<void>;
   }
 
-  export interface RepositoryConstructor {
-    new<Data>(): Repository<Data>;
-  }
+  export type RepositoryProviderPlucked<Provider, Clause extends RepositorySamplingClause<Provider>> = Pick<Provider, Clause['select'][number] extends keyof Provider ? Clause['select'][number] : never>;
 
-  export type RepositoryDataProviderPlucked<DataProvider, Clause extends RepositorySamplingClause<DataProvider>> = Pick<DataProvider, Clause['select'][number] extends keyof DataProvider ? Clause['select'][number] : never>;
+  export type RepositoryProviderProperties<Provider> = Pick<Provider, {
+    [K in keyof Provider]: Provider[K] extends Function ? never : Provider[K] extends RepositoryDataValues ? K : never;
+  }[keyof Provider]>;
 
-  export type RepositoryDataProviderProperties<DataProvider> = Pick<DataProvider, {
-    [K in keyof DataProvider]: DataProvider[K] extends Function ? never : DataProvider[K] extends RepositoryDataValues ? K : never;
-  }[keyof DataProvider]>;
-
-  export interface RepositorySamplingClause<DataProvider> {
-    readonly where: Readonly<Partial<RepositoryDataProviderProperties<DataProvider>>>;
+  export interface RepositorySamplingClause<Provider> {
+    readonly where: Readonly<Partial<RepositoryProviderProperties<Provider>>>;
     readonly select: readonly string[];
   }
-  export type RepositoryDataProviderAddAttributes<DataProvider> = OmitReadable<RepositoryDataProviderProperties<DataProvider>>;
 
-  export interface RepositoryRawData {
-    [key: string]: RepositoryDataValues;
-  }
+  export type RepositoryProviderAddAttributes<Provider> = OmitReadable<RepositoryProviderProperties<Provider>>;
+
+  export type RepositoryProviderUpdateAttributes<Provider> = Partial<OmitReadable<RepositoryProviderProperties<Provider>>>;
+
+  export type RepositoryPersistedAttributes<ProviderInstance, T = RepositoryProviderProperties<ProviderInstance>> = {
+    [K in keyof T as SnakeCase<K>]: T[K]
+  };
+
+  export type RepositoryProviderAttributes<ProviderInstance, T = RepositoryProviderProperties<ProviderInstance>> = {
+    [K in keyof T as CamelCase<K>]: T[K]
+  };
 
   export type RepositoryDataValues =
     string
@@ -45,6 +52,5 @@ declare module '@ioc:Adonis/Core/Repository' {
     | Date[]
     | boolean[]
     | Buffer
-    | null
-    | undefined;
+    | null;
 }
