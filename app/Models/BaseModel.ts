@@ -1,11 +1,11 @@
-import { Model, ModelProperties, ModelDataValues } from '@ioc:Adonis/Core/Model';
+import { Model, ModelProperties, ModelResponseAttributes } from '@ioc:Adonis/Core/Model';
 import { snakeCase } from 'snake-case';
 
-export default abstract class BaseModel<ModelInstance extends BaseModel<ModelInstance>> implements Model {
-  constructor (data: ModelProperties<ModelInstance>) {
+export default abstract class BaseModel<M extends Model> implements Model {
+  constructor (data: ModelProperties<M>) {
     const cleanData = Object.entries(data)
       .reduce((obj: { [key: string]: unknown }, [key, value]) => {
-        if(value !== undefined)
+        if (value !== undefined)
           obj[key] = value;
         return obj;
       }, {});
@@ -13,14 +13,14 @@ export default abstract class BaseModel<ModelInstance extends BaseModel<ModelIns
     Object.assign(this, cleanData);
   }
 
-  public toJSON<T extends BaseModel<ModelInstance>> (this: T): { [key: string]: ModelDataValues } {
+  public toJSON (): ModelResponseAttributes<M> {
     return Object.getOwnPropertyNames(this)
-      .reduce((obj: { [key: string]: ModelDataValues }, key) => {
-        Object.defineProperty(this, snakeCase(key), {
-          value: this[key as keyof T],
+      .reduce((obj: { [key: string]: unknown }, key) => {
+        Object.defineProperty(obj, snakeCase(key), {
+          value: this[key as keyof this],
         });
 
         return obj;
-      }, {});
+      }, {}) as ModelResponseAttributes<M>;
   }
 }

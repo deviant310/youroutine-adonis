@@ -2,20 +2,25 @@ import { Exception } from '@adonisjs/core/build/standalone';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
 import Repositories from '@ioc:YouRoutine/Repositories';
 import { generateAccessToken, generateVerificationCode } from 'App/Helpers/Generators';
+import AccessToken, { AccessTokenType } from 'App/Models/AccessToken';
 import Registration from 'App/Models/Registration';
-import Session, { SessionTokenType } from 'App/Models/Session';
-import AccessToken from 'App/Models/Token';
+import Session from 'App/Models/Session';
 import VerificationCode from 'App/Models/VerificationCode';
 import { createHash } from 'crypto';
 import { DateTime } from 'luxon';
 
-const { userRepository, sessionRepository, registrationRepository } = Repositories;
+const {
+  userRepository,
+  sessionRepository,
+  registrationRepository,
+} = Repositories;
 
 // @TODO В этом контроллере реализуем два метода, register и verify, аутентификацию по токену реализуем в middleware, получение текущего авторизованного пользователя реализуем в AuthProvider
 
 export default class AuthController {
   public async register ({ request }: HttpContextContract): Promise<Registration> {
     const phone: string = request.input('phone');
+    const code = generateVerificationCode();
 
     const user = await userRepository
       .getFirstOfListOrFail({
@@ -23,14 +28,18 @@ export default class AuthController {
         where: { phone },
       });
 
-    const verificationCode = new VerificationCode({ value: generateVerificationCode() });
-
     const registration = await registrationRepository
       .add({
         userId: user.id,
-        verificationCodeHash: await verificationCode.getHashedValue(),
+        verificationCodeHash: await Registration
+          .makeVerificationCodeHash(code),
         expiresAt: null,
       });
+
+    const verificationCode = new VerificationCode({
+      code: code,
+      expiresAt: registration.expiresAt,
+    });
 
     // @TODO здесь нужно инициировать отправку события типа onRegister
     console.log(registration, verificationCode);
@@ -39,38 +48,59 @@ export default class AuthController {
   }
 
   public async verify ({ request }: HttpContextContract): Promise<AccessToken> {
-    const id = request.input('id');
-    const verificationCode = request.input('verification_code');
+    const id = request.input('id') as number;
+    const code = request.input('verification_code') as string;
+    const token = generateAccessToken();
 
-    const registration = await registrationRepository.getByIdOrFail(id);
+    const registration = await registrationRepository
+      .getByIdOrFail(id);
 
-    if (registration.isExpired())
+    const verificationCode = new VerificationCode({
+      code: code,
+      expiresAt: registration.expiresAt,
+    });
+
+    if (verificationCode.hasExpired())
       throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED');
 
-    if (!(await registration.verify(verificationCode)))
+    if (!(await registration.verifyCode(code)))
       throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED');
 
     await registrationRepository.deleteById(registration.id);
 
-    const token = new AccessToken({ value: generateAccessToken() });
-
     const session = await sessionRepository.add({
       userId: registration.userId,
-      tokenHash: Session.makeTokenHash(token.value),
-      tokenType: SessionTokenType.Bearer,
+      accessTokenHash: Session
+        .makeAccessTokenHash(token),
       meta: null,
       expiresAt: null,
     });
 
-    // @TODO здесь нужно инициировать отправку события типа onVerify
-    console.log(session, token);
+    const accessToken = new AccessToken({
+      uuid: session.id.toString(),
+      type: AccessTokenType.Bearer,
+      token: token,
+      expiresAt: null,
+    });
 
-    return token;
+    // @TODO здесь нужно инициировать отправку события типа onVerify
+    console.log(session, accessToken);
+
+    return accessToken;
   }
 
-  // @TODO Необходимо понять где будет производиться проебразование accessToken в publicAccessToken и парсинг в обратную сторону
-  public async logout ({ request }: HttpContextContract) {
-    const token = request.header('Authorization')?.split('Bearer ')?.[1];
+  public async logout ({ request }: HttpContextContract): Promise<void> {
+    const tokenHeaderValue = request.header('Authorization');
+
+    if(!tokenHeaderValue) return;
+
+    const accessToken = AccessToken.fromHeaderValue(tokenHeaderValue);
+
+    const session = sessionRepository.getFirstOfListOrFail({
+      select: ['id'] as const,
+      where: { a }
+    });
+
     await auth.logout();
   }
 
@@ -108,14 +138,6 @@ export default class AuthController {
     } else {
       return false;
     }
-  }
-
-  public async logout (): Promise<void> {
-    /*if (this._session)
-      await this._session.delete();
-
-    this._session = undefined;
-    this._user = undefined;*/
   }
 
   private generatePublicAccessToken (sessionId: number, rawAccessToken: string): string {

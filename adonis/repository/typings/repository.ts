@@ -12,7 +12,7 @@ declare module '@ioc:Adonis/Core/Repository' {
 
     getList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>[] | never[]>;
 
-    createFromAttributes (attributes: RepositoryProviderAddAttributes<Provider>): Promise<Provider>;
+    add (attributes: RepositoryProviderAddAttributes<Provider>): Promise<Provider>;
 
     updateById (id: string | number, attributes: RepositoryProviderUpdateAttributes<Provider>): Promise<Provider>;
 
@@ -34,11 +34,11 @@ declare module '@ioc:Adonis/Core/Repository' {
 
   export type RepositoryProviderUpdateAttributes<Provider> = Partial<OmitReadable<RepositoryProviderProperties<Provider>>>;
 
-  export type RepositoryPersistedAttributes<ProviderInstance, T = RepositoryProviderProperties<ProviderInstance>> = {
+  export type RepositoryPersistedAttributes<Provider, T = RepositoryProviderProperties<Provider>> = {
     [K in keyof T as SnakeCase<K>]: T[K]
   };
 
-  export type RepositoryProviderAttributes<ProviderInstance, T = RepositoryProviderProperties<ProviderInstance>> = {
+  export type RepositoryProviderAttributes<Provider, T = RepositoryProviderProperties<Provider>> = {
     [K in keyof T as CamelCase<K>]: T[K]
   };
 

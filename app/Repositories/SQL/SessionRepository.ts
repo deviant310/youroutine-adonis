@@ -14,8 +14,7 @@ export default class SessionRepository extends SQLRepository<Session> {
     return {
       id: attributes.id,
       userId: attributes.user_id,
-      tokenHash: attributes.token_hash,
-      tokenType: attributes.token_type,
+      accessTokenHash: attributes.access_token_hash,
       meta: attributes.meta,
       expiresAt: attributes.expires_at,
       updatedAt: attributes.updated_at,
@@ -27,8 +26,7 @@ export default class SessionRepository extends SQLRepository<Session> {
     return {
       id: attributes.id,
       user_id: attributes.userId,
-      token_hash: attributes.tokenHash,
-      token_type: attributes.tokenType,
+      access_token_hash: attributes.accessTokenHash,
       meta: attributes.meta,
       expires_at: attributes.expiresAt,
       updated_at: attributes.updatedAt,
