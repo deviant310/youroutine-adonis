@@ -4,7 +4,7 @@ import Repositories from '@ioc:YouRoutine/Repositories';
 import { generateAccessToken, generateVerificationCode } from 'App/Helpers/Generators';
 import Registration from 'App/Models/Registration';
 import Session, { SessionTokenType } from 'App/Models/Session';
-import Token from 'App/Models/Token';
+import AccessToken from 'App/Models/Token';
 import VerificationCode from 'App/Models/VerificationCode';
 import { createHash } from 'crypto';
 import { DateTime } from 'luxon';
@@ -38,7 +38,7 @@ export default class AuthController {
     return registration;
   }
 
-  public async verify ({ request }: HttpContextContract): Promise<Token> {
+  public async verify ({ request }: HttpContextContract): Promise<AccessToken> {
     const id = request.input('id');
     const verificationCode = request.input('verification_code');
 
@@ -52,7 +52,7 @@ export default class AuthController {
 
     await registrationRepository.deleteById(registration.id);
 
-    const token = new Token({ value: generateAccessToken() });
+    const token = new AccessToken({ value: generateAccessToken() });
 
     const session = await sessionRepository.add({
       userId: registration.userId,

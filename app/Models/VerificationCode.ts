@@ -2,14 +2,18 @@ import Hash from '@ioc:Adonis/Core/Hash';
 import BaseModel from 'App/Models/BaseModel';
 
 export default class VerificationCode extends BaseModel<VerificationCode> {
-  public readonly value!: string;
-  public
+  public value!: string;
+  public expiresAt!: Date | null;
 
-  public async verify (plainValue: string): Promise<boolean> {
-    return await Hash.verify(this.value, plainValue);
+  public async verify (hashedValue: string): Promise<boolean> {
+    return await Hash.verify(hashedValue, this.value);
   }
 
   public async getHashedValue (): Promise<string> {
     return await Hash.make(this.value);
+  }
+
+  public isExpired (): boolean {
+    return this.expiresAt ? new Date() > this.expiresAt : false;
   }
 }

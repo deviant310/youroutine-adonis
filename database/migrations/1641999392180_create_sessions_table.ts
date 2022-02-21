@@ -8,7 +8,6 @@ export default class CreateSessionsTable extends BaseSchema {
       table.increments('id').primary();
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable();
       table.string('token', 64).notNullable().unique();
-      table.enum('token_type', ['bearer']).notNullable();
       table.jsonb('meta').nullable();
       table.timestamps(true, true);
     });

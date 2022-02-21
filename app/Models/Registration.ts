@@ -1,3 +1,4 @@
+import Hash from '@ioc:Adonis/Core/Hash';
 import BaseModel from 'App/Models/BaseModel';
 
 export default class Registration extends BaseModel<Registration> {
@@ -7,9 +8,5 @@ export default class Registration extends BaseModel<Registration> {
   public expiresAt!: Date | null;
   public readonly updatedAt!: Date;
   public readonly createdAt!: Date;
-
-  public isExpired (): boolean {
-    return this.expiresAt ? new Date() > this.expiresAt : false;
-  }
 }
 
