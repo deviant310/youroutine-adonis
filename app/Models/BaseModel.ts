@@ -1,26 +1,21 @@
 import { Model, ModelProperties, ModelResponseAttributes } from '@ioc:Adonis/Core/Model';
 import { snakeCase } from 'snake-case';
+import { pickBy, transform } from 'lodash';
 
 export default abstract class BaseModel<M extends Model> implements Model {
   constructor (data: ModelProperties<M>) {
-    const cleanData = Object.entries(data)
-      .reduce((obj: { [key: string]: unknown }, [key, value]) => {
-        if (value !== undefined)
-          obj[key] = value;
-        return obj;
-      }, {});
+    const cleanData = pickBy(data, v => v !== undefined);
 
     Object.assign(this, cleanData);
   }
 
   public toJSON (): ModelResponseAttributes<M> {
-    return Object.getOwnPropertyNames(this)
-      .reduce((obj: { [key: string]: unknown }, key) => {
-        Object.defineProperty(obj, snakeCase(key), {
-          value: this[key as keyof this],
-        });
+    type Accumulator = { [key: string]: unknown };
 
-        return obj;
-      }, {}) as ModelResponseAttributes<M>;
+    return transform(Object.getOwnPropertyNames(this), (obj: Accumulator, key) => {
+      obj[snakeCase(key)] = this[key as keyof this];
+
+      return obj;
+    }, {}) as ModelResponseAttributes<M>;
   }
 }

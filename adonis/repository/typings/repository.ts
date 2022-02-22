@@ -1,4 +1,5 @@
 declare module '@ioc:Adonis/Core/Repository' {
+  import { DateTime } from 'luxon';
   import { CamelCase, SnakeCase } from 'type-fest';
 
   export interface Repository<Provider> {
@@ -30,26 +31,26 @@ declare module '@ioc:Adonis/Core/Repository' {
     readonly select: readonly string[];
   }
 
-  export type RepositoryProviderAddAttributes<Provider> = OmitReadable<RepositoryProviderProperties<Provider>>;
-
-  export type RepositoryProviderUpdateAttributes<Provider> = Partial<OmitReadable<RepositoryProviderProperties<Provider>>>;
-
-  export type RepositoryPersistedAttributes<Provider, T = RepositoryProviderProperties<Provider>> = {
-    [K in keyof T as SnakeCase<K>]: T[K]
+  export type RepositoryPersistableAttributes<Provider, T = RepositoryProviderProperties<Provider>> = {
+    [K in keyof T as SnakeCase<K>]: RepositoryDataValues
   };
 
   export type RepositoryProviderAttributes<Provider, T = RepositoryProviderProperties<Provider>> = {
     [K in keyof T as CamelCase<K>]: T[K]
   };
 
+  export type RepositoryProviderAddAttributes<Provider> = OmitReadable<RepositoryProviderAttributes<Provider>>;
+
+  export type RepositoryProviderUpdateAttributes<Provider> = Partial<OmitReadable<RepositoryProviderAttributes<Provider>>>;
+
   export type RepositoryDataValues =
     string
     | number
     | boolean
-    | Date
+    | DateTime
     | string[]
     | number[]
-    | Date[]
+    | DateTime[]
     | boolean[]
     | Buffer
     | null;

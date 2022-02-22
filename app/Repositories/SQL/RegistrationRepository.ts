@@ -1,8 +1,15 @@
-import { RepositoryPersistedItem } from '@ioc:Adonis/Core/Repository';
+import {
+  RepositoryPersistableAttributes,
+  RepositoryProviderAttributes,
+} from '@ioc:Adonis/Core/Repository';
 import Registration from 'App/Models/Registration';
 import SQLRepository from './SQLRepository';
 
-export default class RegistrationRepository extends SQLRepository<Readonly<Registration>> {
+type PersistableAttributes = RepositoryPersistableAttributes<Registration>;
+type ProviderAttributes = RepositoryProviderAttributes<Registration>;
+
+export default class RegistrationRepository extends SQLRepository<Registration> {
+  protected providerConstructor = Registration;
   protected table = 'registrations';
   protected keyName = 'id';
 
@@ -15,6 +22,14 @@ export default class RegistrationRepository extends SQLRepository<Readonly<Regis
       updatedAt: new Date(persistedItem.updated_at as string),
       createdAt: new Date(persistedItem.created_at as string),
     });
+  }
+
+  protected getPersistableAttributesFromProviderAttributes<T extends ProviderAttributes> (attributes: T): PersistedAttributes {
+    return undefined;
+  }
+
+  protected getProviderAttributesFromPersistableAttributes<T extends PersistedAttributes> (attributes: T): ProviderAttributes {
+    return undefined;
   }
 
   /*protected getRawDataByAttributes (provider: Registration): RepositoryRawData {

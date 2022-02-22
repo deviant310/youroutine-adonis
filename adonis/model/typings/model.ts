@@ -1,4 +1,5 @@
 declare module '@ioc:Adonis/Core/Model' {
+  import { DateTime } from 'luxon';
   import { SnakeCase } from 'type-fest';
 
   export type Model = {
@@ -17,10 +18,10 @@ declare module '@ioc:Adonis/Core/Model' {
     string
     | number
     | boolean
-    | Date
+    | DateTime
     | string[]
     | number[]
-    | Date[]
+    | DateTime[]
     | boolean[]
     | Buffer
     | null;

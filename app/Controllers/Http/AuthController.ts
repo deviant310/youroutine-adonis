@@ -6,14 +6,8 @@ import AccessToken, { AccessTokenType } from 'App/Models/AccessToken';
 import Registration from 'App/Models/Registration';
 import Session from 'App/Models/Session';
 import VerificationCode from 'App/Models/VerificationCode';
-import { createHash } from 'crypto';
-import { DateTime } from 'luxon';
 
-const {
-  userRepository,
-  sessionRepository,
-  registrationRepository,
-} = Repositories;
+const { userRepository, sessionRepository, registrationRepository } = Repositories;
 
 // @TODO В этом контроллере реализуем два метода, register и verify, аутентификацию по токену реализуем в middleware, получение текущего авторизованного пользователя реализуем в AuthProvider
 
@@ -96,25 +90,12 @@ export default class AuthController {
 
     const accessToken = AccessToken.fromHeaderValue(tokenHeaderValue);
 
-    const session = sessionRepository.getFirstOfListOrFail({
-      select: ['id'] as const,
-      where: { a }
-    });
+    const sessionId = Number(accessToken.uuid);
 
-    await auth.logout();
+    await sessionRepository.deleteById(sessionId);
   }
 
-  public async session (): Promise<SessionData | null> {
-    return this._sessionId ? sessionRepo.findById(this._sessionId) : null;
-  }
-
-  public async user (): Promise<UserData | null> {
-    const session = await this.session();
-
-    return session ? userRepo.findById(session.userId) : null;
-  }
-
-  public async authorizeUserBySession (sessionId: number, sessionAccessToken: string): Promise<void> {
+  /*public async authorizeUserBySession (sessionId: number, sessionAccessToken: string): Promise<void> {
     const session = await sessionRepo.findByIdOrFail(sessionId);
 
     if (session.expiresAt && new DateTime() > session.expiresAt)
@@ -126,29 +107,5 @@ export default class AuthController {
       throw new Exception('Invalid access token', 403, 'E_ACCESS_TOKEN_INVALID');
 
     await this.loginByUserId(session.userId);
-  }
-
-  public async loginByUserId (userId: number): Promise<boolean> {
-    const user = await userRepo.findById(userId);
-
-    if (user) {
-      this._user = user;
-
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private generatePublicAccessToken (sessionId: number, rawAccessToken: string): string {
-
-  }
-
-  private parsePublicAccessToken (publicAccessToken: string): [number, string] {
-    const [sessionIdEncoded, accessToken] = publicAccessToken.split('.');
-    const sessionId = parseInt([...Array(this._accessTokenConvertIterationsCount).keys()]
-      .reduce(str => base64.decode(str), sessionIdEncoded));
-
-    return [sessionId, accessToken];
-  }
+  }*/
 }

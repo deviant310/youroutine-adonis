@@ -1,5 +1,6 @@
 import BaseModel from 'App/Models/BaseModel';
 import { createHash } from 'crypto';
+import { DateTime } from 'luxon';
 
 export default class Session extends BaseModel<Session> {
   public static makeAccessTokenHash (token: string): string {
@@ -8,13 +9,13 @@ export default class Session extends BaseModel<Session> {
 
   public readonly id!: number;
   public userId!: number;
-  public accessTokenHash!: string;
+  public accessToken!: string;
   public meta!: string | null;
-  public expiresAt!: Date | null;
-  public readonly updatedAt!: Date;
-  public readonly createdAt!: Date;
+  public expiresAt!: DateTime | null;
+  public readonly updatedAt!: DateTime;
+  public readonly createdAt!: DateTime;
 
   public verifyAccessToken (token: string): boolean {
-    return this.accessTokenHash === createHash('sha256').update(token).digest('hex');
+    return this.accessToken === createHash('sha256').update(token).digest('hex');
   }
 }

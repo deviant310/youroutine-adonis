@@ -1,5 +1,6 @@
 import Hash from '@ioc:Adonis/Core/Hash';
 import BaseModel from 'App/Models/BaseModel';
+import { DateTime } from 'luxon';
 
 export default class Registration extends BaseModel<Registration> {
   public static async makeVerificationCodeHash (verificationCode: string): Promise<string> {
@@ -9,9 +10,9 @@ export default class Registration extends BaseModel<Registration> {
   public readonly id!: number;
   public userId!: number;
   public verificationCodeHash!: string;
-  public expiresAt!: Date | null;
-  public readonly updatedAt!: Date;
-  public readonly createdAt!: Date;
+  public expiresAt!: DateTime | null;
+  public readonly updatedAt!: DateTime;
+  public readonly createdAt!: DateTime;
 
   public async verifyCode (verificationCode: string): Promise<boolean> {
     return await Hash.verify(this.verificationCodeHash, verificationCode);

@@ -4,20 +4,21 @@ import {
   RepositoryProviderAddAttributes,
   RepositoryProviderPlucked,
   RepositoryProviderUpdateAttributes,
-  RepositoryPersistedAttributes,
-  RepositorySamplingClause, RepositoryProviderAttributes,
+  RepositoryPersistableAttributes,
+  RepositorySamplingClause,
+  RepositoryProviderAttributes,
 } from '@ioc:Adonis/Core/Repository';
 import Database from '@ioc:Adonis/Lucid/Database';
 
 export default abstract class SQLRepository<Provider> implements Repository<Provider> {
   protected db = Database;
-  protected abstract providerConstructor: { new(...args: any): Provider };
+  protected abstract providerConstructor: { new (...args: any): Provider };
   protected abstract table: string;
   protected abstract keyName: string;
 
-  protected abstract getProviderAttributesFromPersistableAttributes<T extends RepositoryPersistedAttributes<Provider>> (attributes: T): RepositoryProviderAttributes<Provider>;
+  protected abstract getProviderAttributesFromPersistableAttributes (attributes: RepositoryPersistableAttributes<Provider>): RepositoryProviderAttributes<Provider>;
 
-  protected abstract getPersistableAttributesFromProviderAttributes<T extends RepositoryProviderAttributes<Provider>> (attributes: T): RepositoryPersistedAttributes<Provider>;
+  protected abstract getPersistableAttributesFromProviderAttributes (attributes: Partial<RepositoryProviderAttributes<Provider>>): RepositoryPersistableAttributes<Provider>;
 
   public async getById (id: string | number): Promise<Provider | null> {
     const persistedAttributes = await this.db
@@ -68,9 +69,11 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
     return [];
   }
 
-  public async add (providerAddAttributes: RepositoryProviderAddAttributes<Provider>): Promise<Provider> {
+  public async add (attributes: RepositoryProviderAddAttributes<Provider>): Promise<Provider> {
     const persistableAttributes = this
-      .getPersistableAttributesFromProviderAttributes(providerAddAttributes);
+      .getPersistableAttributesFromProviderAttributes(attributes as Partial<RepositoryProviderAttributes<Provider>>);
+
+    //const cleanPersistableAttributes = pickBy(persistableAttributes, v => v !== undefined);
 
     const persistedAttributes = await this.db
       .table(this.table)
@@ -84,10 +87,13 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
   }
 
   public async updateById (id: string | number, attributes: RepositoryProviderUpdateAttributes<Provider>): Promise<Provider> {
+    const persistableAttributes = this
+      .getPersistableAttributesFromProviderAttributes(attributes as Partial<RepositoryProviderAttributes<Provider>>);
+
     const persistedAttributes = await this.db
       .from(this.table)
       .where(this.keyName, id)
-      .update(attributes)
+      .update(persistableAttributes)
       .first();
 
     const providerAttributes = this
