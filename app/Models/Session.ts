@@ -10,8 +10,8 @@ export default class Session extends BaseModel<Session> {
   public readonly id!: number;
   public userId!: number;
   public accessToken!: string;
-  public meta!: string | null;
-  public expiresAt!: DateTime | null;
+  public meta?: string | null;
+  public expiresAt?: DateTime | null;
   public readonly updatedAt!: DateTime;
   public readonly createdAt!: DateTime;
 

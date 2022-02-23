@@ -13,37 +13,41 @@ declare module '@ioc:Adonis/Core/Repository' {
 
     getList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>[] | never[]>;
 
-    add (attributes: RepositoryProviderAddAttributes<Provider>): Promise<Provider>;
+    add (attributes: RepositoryProviderInferredAddAttributes<Provider>): Promise<Provider>;
 
-    updateById (id: string | number, attributes: RepositoryProviderUpdateAttributes<Provider>): Promise<Provider>;
+    updateById (id: string | number, attributes: RepositoryProviderInferredUpdateAttributes<Provider>): Promise<Provider>;
 
     deleteById (id: string | number): Promise<void>;
   }
 
-  export type RepositoryProviderPlucked<Provider, Clause extends RepositorySamplingClause<Provider>> = Pick<Provider, Clause['select'][number] extends keyof Provider ? Clause['select'][number] : never>;
+  type RepositoryProviderProperties<Provider> = Pick<Provider, {
+    [K in keyof Provider]: Provider[K] extends Function ? never : Provider[K] extends RepositoryProviderValues ? K : never;
+  }[keyof Provider]>;
 
-  export type RepositoryProviderProperties<Provider> = Pick<Provider, {
-    [K in keyof Provider]: Provider[K] extends Function ? never : Provider[K] extends RepositoryDataValues ? K : never;
+  type RepositoryPersistedProperties<Provider> = Pick<Provider, {
+    [K in keyof Provider]: Provider[K] extends Function ? never : K;
   }[keyof Provider]>;
 
   export interface RepositorySamplingClause<Provider> {
     readonly where: Readonly<Partial<RepositoryProviderProperties<Provider>>>;
-    readonly select: readonly string[];
+    readonly select: readonly (keyof RepositoryProviderProperties<Provider>)[];
   }
 
-  export type RepositoryPersistableAttributes<Provider, T = RepositoryProviderProperties<Provider>> = {
-    [K in keyof T as SnakeCase<K>]: RepositoryDataValues
+  export type RepositoryProviderPlucked<Provider, Clause extends RepositorySamplingClause<Provider>> = Omit<Provider, keyof Omit<RepositoryProviderProperties<Provider>, Clause['select'][number]>>;
+
+  export type RepositoryPersistedInferredAttributes<Provider, P = RepositoryPersistedProperties<Provider>> = {
+    [K in keyof P as SnakeCase<K>]: RepositoryPersistedValues
   };
 
-  export type RepositoryProviderAttributes<Provider, T = RepositoryProviderProperties<Provider>> = {
-    [K in keyof T as CamelCase<K>]: T[K]
+  export type RepositoryProviderInferredAttributes<Provider, P = RepositoryProviderProperties<Provider>> = {
+    [K in keyof P as CamelCase<K>]: P[K]
   };
 
-  export type RepositoryProviderAddAttributes<Provider> = OmitReadable<RepositoryProviderAttributes<Provider>>;
+  export type RepositoryProviderInferredAddAttributes<Provider> = OmitReadable<RepositoryProviderInferredAttributes<Provider>>;
 
-  export type RepositoryProviderUpdateAttributes<Provider> = Partial<OmitReadable<RepositoryProviderAttributes<Provider>>>;
+  export type RepositoryProviderInferredUpdateAttributes<Provider> = Partial<OmitReadable<RepositoryProviderInferredAttributes<Provider>>>;
 
-  export type RepositoryDataValues =
+  export type RepositoryProviderValues =
     string
     | number
     | boolean
@@ -53,5 +57,19 @@ declare module '@ioc:Adonis/Core/Repository' {
     | DateTime[]
     | boolean[]
     | Buffer
-    | null;
+    | null
+    | undefined;
+
+  export type RepositoryPersistedValues =
+    string
+    | number
+    | boolean
+    | Date
+    | string[]
+    | number[]
+    | Date[]
+    | boolean[]
+    | Buffer
+    | null
+    | undefined;
 }

@@ -20,7 +20,7 @@ Content-Type: application/json
 }
 
 > {%
- client.global.set("session_id", response.body.session_id)
+ client.global.set("registration_id", response.body.id)
  %}
 
 ### Verify
@@ -28,16 +28,16 @@ POST {{host}}/api/auth/verify
 Content-Type: application/json
 
 {
-  "session_id": "{{session_id}}",
-  "verification_code": "209344"
+  "id": "{{registration_id}}",
+  "verification_code": "892501"
 }
 
-> {% client.global.set("auth_token", response.body.token); %}
+> {% client.global.set("access_token", response.body.token); %}
 
 ### Logout
 POST {{host}}/api/logout
-Authorization: Bearer {{auth_token}}
+Authorization: Bearer {{access_token}}
 
 ### Users list
 GET {{host}}/api/users
-Authorization: Bearer {{auth_token}}
+Authorization: Bearer {{access_token}}

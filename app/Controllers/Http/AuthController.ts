@@ -6,6 +6,7 @@ import AccessToken, { AccessTokenType } from 'App/Models/AccessToken';
 import Registration from 'App/Models/Registration';
 import Session from 'App/Models/Session';
 import VerificationCode from 'App/Models/VerificationCode';
+import { DateTime } from 'luxon';
 
 const { userRepository, sessionRepository, registrationRepository } = Repositories;
 
@@ -25,9 +26,9 @@ export default class AuthController {
     const registration = await registrationRepository
       .add({
         userId: user.id,
-        verificationCodeHash: await Registration
+        verificationCode: await Registration
           .makeVerificationCodeHash(code),
-        expiresAt: null,
+        expiresAt: DateTime.now().plus({ minutes: 5 }),
       });
 
     const verificationCode = new VerificationCode({
@@ -38,7 +39,7 @@ export default class AuthController {
     // @TODO здесь нужно инициировать отправку события типа onRegister
     console.log(registration, verificationCode);
 
-    return registration;
+    return registration.show(['id', 'expiresAt']);
   }
 
   public async verify ({ request }: HttpContextContract): Promise<AccessToken> {
@@ -64,10 +65,8 @@ export default class AuthController {
 
     const session = await sessionRepository.add({
       userId: registration.userId,
-      accessTokenHash: Session
+      accessToken: Session
         .makeAccessTokenHash(token),
-      meta: null,
-      expiresAt: null,
     });
 
     const accessToken = new AccessToken({
@@ -79,33 +78,18 @@ export default class AuthController {
 
     // @TODO здесь нужно инициировать отправку события типа onVerify
     console.log(session, accessToken);
-
-    return accessToken;
+    debugger;
+    return accessToken.hide(['uuid']);
   }
 
   public async logout ({ request }: HttpContextContract): Promise<void> {
-    const tokenHeaderValue = request.header('Authorization');
+    const authorizationHeader = request.header('Authorization');
 
-    if(!tokenHeaderValue) return;
+    if(!authorizationHeader) return;
 
-    const accessToken = AccessToken.fromHeaderValue(tokenHeaderValue);
-
+    const accessToken = AccessToken.fromHeaderValue(authorizationHeader);
     const sessionId = Number(accessToken.uuid);
 
     await sessionRepository.deleteById(sessionId);
   }
-
-  /*public async authorizeUserBySession (sessionId: number, sessionAccessToken: string): Promise<void> {
-    const session = await sessionRepo.findByIdOrFail(sessionId);
-
-    if (session.expiresAt && new DateTime() > session.expiresAt)
-      throw new Exception('Session has expired', 403, 'E_SESSION_EXPIRED');
-
-    const sessionAccessTokenHash = createHash('sha256').update(sessionAccessToken).digest('hex');
-
-    if (session.accessToken !== sessionAccessTokenHash)
-      throw new Exception('Invalid access token', 403, 'E_ACCESS_TOKEN_INVALID');
-
-    await this.loginByUserId(session.userId);
-  }*/
 }

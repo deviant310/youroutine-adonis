@@ -13,7 +13,7 @@ export default class AppProvider {
   public async boot (): Promise<void> {
     const Route = this.app.container.use('Adonis/Core/Route');
 
-    Route.get('/', async () => null);
+    Route.get('/', async () => {});
   }
 
   public async ready (): Promise<void> {

@@ -1,44 +1,38 @@
 import {
-  RepositoryPersistableAttributes,
-  RepositoryProviderAttributes,
+  RepositoryPersistedInferredAttributes,
+  RepositoryProviderInferredAttributes,
 } from '@ioc:Adonis/Core/Repository';
 import Registration from 'App/Models/Registration';
+import { DateTime } from 'luxon';
 import SQLRepository from './SQLRepository';
 
-type PersistableAttributes = RepositoryPersistableAttributes<Registration>;
-type ProviderAttributes = RepositoryProviderAttributes<Registration>;
+type PersistableAttributes = Partial<RepositoryPersistedInferredAttributes<Registration>>;
+type ProviderAttributes = Partial<RepositoryProviderInferredAttributes<Registration>>;
 
 export default class RegistrationRepository extends SQLRepository<Registration> {
   protected providerConstructor = Registration;
   protected table = 'registrations';
   protected keyName = 'id';
 
-  protected getDataProviderByPersistedItem (persistedItem: RepositoryPersistedItem): Registration {
-    return new Registration({
-      id: Number(persistedItem.id),
-      userId: Number(persistedItem.user_id),
-      verificationCodeHash: String(persistedItem.verification_code),
-      expiresAt: new Date(persistedItem.expires_at as string),
-      updatedAt: new Date(persistedItem.updated_at as string),
-      createdAt: new Date(persistedItem.created_at as string),
-    });
-  }
-
-  protected getPersistableAttributesFromProviderAttributes<T extends ProviderAttributes> (attributes: T): PersistedAttributes {
-    return undefined;
-  }
-
-  protected getProviderAttributesFromPersistableAttributes<T extends PersistedAttributes> (attributes: T): ProviderAttributes {
-    return undefined;
-  }
-
-  /*protected getRawDataByAttributes (provider: Registration): RepositoryRawData {
+  protected getProviderAttributesFromPersistableAttributes (attributes: PersistableAttributes): ProviderAttributes {
     return {
-      id: provider.id,
-      user_id: provider.userId,
-      verification_code: provider.verificationCodeHash,
-      expires_at: provider.expiresAt,
-      created_at: provider.createdAt,
+      id: attributes.id ? Number(attributes.id) : undefined,
+      userId: attributes.user_id ? Number(attributes.user_id) : undefined,
+      verificationCode: attributes.verification_code ? String(attributes.verification_code) : undefined,
+      expiresAt: attributes.expires_at ? DateTime.fromJSDate(attributes.expires_at as Date) : undefined,
+      updatedAt: attributes.updated_at ? DateTime.fromJSDate(attributes.updated_at as Date) : undefined,
+      createdAt: attributes.created_at ? DateTime.fromJSDate(attributes.created_at as Date) : undefined,
     };
-  }*/
+  }
+
+  protected getPersistableAttributesFromProviderAttributes (attributes: ProviderAttributes): PersistableAttributes {
+    return {
+      id: attributes.id,
+      user_id: attributes.userId,
+      verification_code: attributes.verificationCode,
+      expires_at: attributes.expiresAt?.toJSDate(),
+      updated_at: attributes.updatedAt?.toJSDate(),
+      created_at: attributes.createdAt?.toJSDate(),
+    };
+  }
 }

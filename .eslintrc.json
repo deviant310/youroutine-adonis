@@ -19,7 +19,6 @@
         "requireLast": false
       }
     }],
-    "@typescript-eslint/explicit-module-boundary-types": ["error"],
     "@typescript-eslint/no-namespace": "off",
     "@typescript-eslint/type-annotation-spacing": ["error", {
       "before": false,

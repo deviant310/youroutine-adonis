@@ -1,27 +1,41 @@
-import { RepositoryContract, StrictValues } from '@ioc:Adonis/Core/Repository'
+import {
+  Repository,
+  RepositoryProviderInferredAddAttributes,
+  RepositoryProviderInferredUpdateAttributes,
+  RepositoryProviderPlucked,
+  RepositorySamplingClause,
+} from '@ioc:Adonis/Core/Repository';
 
-export default abstract class RedisRepository implements RepositoryContract {
-  public create (attributes: object): object {
-    return attributes
+export default abstract class RedisRepository<Provider> implements Repository<Provider> {
+  public add (attributes: RepositoryProviderInferredAddAttributes<Provider>) {
+    return Promise.resolve(attributes);
   }
 
-  public findBy (key: string, value: StrictValues): object {
-    return { key, value }
+  public deleteById (id: string | number) {
+    return Promise.resolve(id);
   }
 
-  public findById (id: number): object {
-    return { id }
+  public getById (id: string | number): Promise<Provider | null> {
+    return Promise.resolve(undefined);
   }
 
-  public deleteById (id: string | number): void {
-    console.log(id)
+  public getByIdOrFail (id: string | number): Promise<Provider> {
+    return Promise.resolve(undefined);
   }
 
-  public findByIdOrFail (id: string | number): object {
-    return { id }
+  public getFirstOfList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause> | null> {
+    return Promise.resolve(undefined);
   }
 
-  public findByOrFail (key: string, value: StrictValues): object {
-    return { key, value }
+  public getFirstOfListOrFail<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>> {
+    return Promise.resolve(undefined);
+  }
+
+  public getList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>[] | never[]> {
+    return Promise.resolve(undefined);
+  }
+
+  public updateById (id: string | number, attributes: RepositoryProviderInferredUpdateAttributes<Provider>): Promise<Provider> {
+    return Promise.resolve(undefined);
   }
 }

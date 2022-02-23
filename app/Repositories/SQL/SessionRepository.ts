@@ -1,13 +1,13 @@
 import {
-  RepositoryPersistableAttributes,
-  RepositoryProviderAttributes,
+  RepositoryPersistedInferredAttributes,
+  RepositoryProviderInferredAttributes,
 } from '@ioc:Adonis/Core/Repository';
 import Session from 'App/Models/Session';
 import { DateTime } from 'luxon';
 import SQLRepository from './SQLRepository';
 
-type PersistableAttributes = RepositoryPersistableAttributes<Session>;
-type ProviderAttributes = RepositoryProviderAttributes<Session>;
+type PersistableAttributes = Partial<RepositoryPersistedInferredAttributes<Session>>;
+type ProviderAttributes = Partial<RepositoryProviderInferredAttributes<Session>>;
 
 export default class SessionRepository extends SQLRepository<Session> {
   protected providerConstructor = Session;
@@ -16,13 +16,13 @@ export default class SessionRepository extends SQLRepository<Session> {
 
   protected getProviderAttributesFromPersistableAttributes (attributes: PersistableAttributes): ProviderAttributes {
     return {
-      id: Number(attributes.id),
-      userId: Number(attributes.user_id),
-      accessToken: String(attributes.access_token),
-      meta: String(attributes.meta),
-      expiresAt: DateTime.fromISO(attributes.expires_at as string),
-      updatedAt: DateTime.fromISO(attributes.updated_at as string),
-      createdAt: DateTime.fromISO(attributes.created_at as string),
+      id: attributes.id ? Number(attributes.id) : undefined,
+      userId: attributes.user_id ? Number(attributes.user_id) : undefined,
+      accessToken: attributes.access_token ? String(attributes.access_token) : undefined,
+      meta: attributes.meta ? String(attributes.meta) : undefined,
+      expiresAt: attributes.expires_at ? DateTime.fromJSDate(attributes.expires_at as Date) : undefined,
+      updatedAt: attributes.updated_at ? DateTime.fromJSDate(attributes.updated_at as Date) : undefined,
+      createdAt: attributes.created_at ? DateTime.fromJSDate(attributes.created_at as Date) : undefined,
     };
   }
 
@@ -32,9 +32,9 @@ export default class SessionRepository extends SQLRepository<Session> {
       user_id: attributes.userId,
       access_token: attributes.accessToken,
       meta: attributes.meta,
-      expires_at: attributes.expiresAt,
-      updated_at: attributes.updatedAt,
-      created_at: attributes.createdAt,
+      expires_at: attributes.expiresAt?.toJSDate(),
+      updated_at: attributes.updatedAt?.toJSDate(),
+      created_at: attributes.createdAt?.toJSDate(),
     };
   }
 }

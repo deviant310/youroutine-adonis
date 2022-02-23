@@ -19,11 +19,11 @@
   ],
   "providers": [
     "./providers/AppProvider",
+    "./providers/RepositoryProvider",
     "@adonisjs/core",
     "@adonisjs/lucid",
     "@adonisjs/session",
-    "@adonisjs/redis",
-    "@adonisjs/auth"
+    "@adonisjs/redis"
   ],
   "aceProviders": [
     "@adonisjs/repl"

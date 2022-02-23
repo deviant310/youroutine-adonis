@@ -8,27 +8,28 @@
 | reading docs.
 |
 | The exception handler extends a base `HttpExceptionHandler` which is not
-| mandatory, however it can do lot of heavy lifting to handle the errors
+| mandatory, however it can do a lot of heavy lifting to handle the errors
 | properly.
 |
 */
 
-import Logger from '@ioc:Adonis/Core/Logger'
-import HttpExceptionHandler from '@ioc:Adonis/Core/HttpExceptionHandler'
-import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
+import HttpExceptionHandler from '@ioc:Adonis/Core/HttpExceptionHandler';
+import Logger from '@ioc:Adonis/Core/Logger';
 
 export default class ExceptionHandler extends HttpExceptionHandler {
   constructor () {
-    super(Logger)
+    super(Logger);
   }
 
-  public async handle (error: any, ctx: HttpContextContract) {
+  public async handle (error: any, ctx: HttpContextContract): Promise<void> {
+    console.log(error);
     return ctx.response
       .status(error.status || 500)
       .send({
         message: error.message,
         stack: error.stack.split('\n'),
         code: error.code,
-      })
+      });
   }
 }

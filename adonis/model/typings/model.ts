@@ -10,9 +10,9 @@ declare module '@ioc:Adonis/Core/Model' {
     [K in keyof M]: M[K] extends Function ? never : M[K] extends ModelDataValues ? K : never;
   }[keyof M]>;
 
-  export type ModelResponseAttributes<M extends Model, T = ModelProperties<M>> = Partial<{
+  export type ModelResponseAttributes<M extends Model, T = ModelProperties<M>> = {
     [K in keyof T as SnakeCase<K>]: T[K]
-  }>;
+  };
 
   export type ModelDataValues =
     string
@@ -24,5 +24,6 @@ declare module '@ioc:Adonis/Core/Model' {
     | DateTime[]
     | boolean[]
     | Buffer
-    | null;
+    | null
+    | undefined;
 }

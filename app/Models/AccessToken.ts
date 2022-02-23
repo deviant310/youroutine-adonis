@@ -1,5 +1,5 @@
-import { base64 } from '@ioc:Adonis/Core/Helpers';
 import { ModelResponseAttributes } from '@ioc:Adonis/Core/Model';
+import Base64 from 'App/Helpers/Converters/Base64';
 import BaseModel from 'App/Models/BaseModel';
 import { DateTime } from 'luxon';
 
@@ -8,23 +8,19 @@ export enum AccessTokenType {
 }
 
 export default class AccessToken extends BaseModel<AccessToken> {
-  private static readonly _uuidConvertIterationsCount = 2;
+  private static readonly _convertIterationsCount = 2;
 
   private static getEncodedTokenFromTokenParts (type: AccessTokenType, tokenParts: string[]) {
     switch (type) {
-      case AccessTokenType.Bearer:
-      default:
-        return [...Array(AccessToken._uuidConvertIterationsCount).keys()]
-          .reduce(str => base64.encode(str), tokenParts.join('.'));
+      case AccessTokenType.Bearer: default:
+        return Base64.encode(tokenParts.join('.'), AccessToken._convertIterationsCount);
     }
   }
 
   private static getTokenPartsFromEncodedToken (type: AccessTokenType, encodedToken: string) {
     switch (type) {
-      case AccessTokenType.Bearer:
-      default:
-        return [...Array(AccessToken._uuidConvertIterationsCount).keys()]
-          .reduce(str => base64.decode(str), encodedToken).split('.');
+      case AccessTokenType.Bearer: default:
+        return Base64.decode(encodedToken, AccessToken._convertIterationsCount).split('.');
     }
   }
 
@@ -42,7 +38,7 @@ export default class AccessToken extends BaseModel<AccessToken> {
   public uuid!: string;
   public type!: AccessTokenType;
   public token!: string;
-  public expiresAt!: DateTime | null;
+  public expiresAt?: DateTime | null;
 
   public getEncodedToken (): string {
     return AccessToken
@@ -57,8 +53,10 @@ export default class AccessToken extends BaseModel<AccessToken> {
     return this.expiresAt ? DateTime.now() > this.expiresAt : false;
   }
 
+  // @TODO нужно избавиться от этого метода и найти другой способ сериализации данных
   public toJSON (): ModelResponseAttributes<AccessToken> {
     return {
+      uuid: this.uuid,
       type: this.type,
       token: this.getEncodedToken(),
       expires_at: this.expiresAt,

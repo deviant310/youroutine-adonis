@@ -1,29 +1,40 @@
-import { RepositoryRawData } from '@ioc:Adonis/Core/Repository';
+import {
+  RepositoryPersistedInferredAttributes,
+  RepositoryProviderInferredAttributes,
+} from '@ioc:Adonis/Core/Repository';
 import User from 'App/Models/User';
+import { DateTime } from 'luxon';
 import SQLRepository from './SQLRepository';
 
+type PersistableAttributes = Partial<RepositoryPersistedInferredAttributes<User>>;
+type ProviderAttributes = Partial<RepositoryProviderInferredAttributes<User>>;
+
 export default class UserRepository extends SQLRepository<User> {
-  public table = 'users';
+  protected providerConstructor = User;
+  protected table = 'users';
+  protected keyName = 'id';
 
-  protected getDataProviderByRawData (rawData: RepositoryRawData): User {
-    const {
-      id: id,
-      phone: phone,
-      name: name,
-      surname: surname,
-      patronymic: patronymic,
-      updated_at: updatedAt,
-      created_at: createdAt,
-    } = rawData;
+  protected getProviderAttributesFromPersistableAttributes (attributes: PersistableAttributes): ProviderAttributes {
+    return {
+      id: attributes.id ? Number(attributes.id) : undefined,
+      phone: attributes.phone ? String(attributes.phone) : undefined,
+      name: attributes.name ? String(attributes.name) : undefined,
+      surname: attributes.surname ? String(attributes.surname) : undefined,
+      patronymic: attributes.patronymic ? String(attributes.patronymic) : undefined,
+      updatedAt: attributes.updated_at ? DateTime.fromJSDate(attributes.updated_at as Date) : undefined,
+      createdAt: attributes.created_at ? DateTime.fromJSDate(attributes.created_at as Date) : undefined,
+    };
+  }
 
-    return new User({
-      id: id as number,
-      phone: phone as string,
-      name: name as string,
-      surname: surname as string,
-      patronymic: patronymic as string,
-      updatedAt: updatedAt as Date,
-      createdAt: createdAt as Date,
-    });
+  protected getPersistableAttributesFromProviderAttributes (attributes: ProviderAttributes): PersistableAttributes {
+    return {
+      id: attributes.id,
+      phone: attributes.phone,
+      name: attributes.name,
+      surname: attributes.surname,
+      patronymic: attributes.patronymic,
+      updated_at: attributes.updatedAt?.toJSDate(),
+      created_at: attributes.createdAt?.toJSDate(),
+    };
   }
 }

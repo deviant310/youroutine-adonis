@@ -1,9 +1,14 @@
-import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import User from 'App/Models/User'
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
+import Repositories from '@ioc:YouRoutine/Repositories';
+
+const { userRepository } = Repositories;
 
 export default class UsersController {
   public async index ({}: HttpContextContract) {
-    return await User.all()
+    return await userRepository.getList({
+      select: ['id', 'name'] as const,
+      where: { id: 1 },
+    });
   }
 
   public async store ({}: HttpContextContract) {
