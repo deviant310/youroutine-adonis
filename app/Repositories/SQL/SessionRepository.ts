@@ -1,20 +1,20 @@
 import {
-  RepositoryPersistableAttributes,
-  RepositoryProviderAttributes,
+  InlineAttributes,
+  DatabaseAttributes,
 } from '@ioc:Adonis/Core/Repository';
 import Session from 'App/Models/Session';
 import { DateTime } from 'luxon';
 import SQLRepository from './SQLRepository';
 
-type PersistableAttributes = RepositoryPersistableAttributes<Session>;
-type ProviderAttributes = RepositoryProviderAttributes<Session>;
+type SessionDatabaseAttributes = DatabaseAttributes<Session>;
+type SessionInlineAttributes = InlineAttributes<Session>;
 
 export default class SessionRepository extends SQLRepository<Session> {
-  protected providerConstructor = Session;
+  protected modelConstructor = Session;
   protected table = 'sessions';
   protected keyName = 'id';
 
-  protected getProviderAttributesFromPersistableAttributes (attributes: PersistableAttributes): ProviderAttributes {
+  protected getInlineAttributesFromDatabaseAttributes (attributes: SessionDatabaseAttributes): SessionInlineAttributes {
     return {
       id: Number(attributes.id),
       userId: Number(attributes.user_id),
@@ -26,7 +26,7 @@ export default class SessionRepository extends SQLRepository<Session> {
     };
   }
 
-  protected getPersistableAttributesFromProviderAttributes (attributes: ProviderAttributes): PersistableAttributes {
+  protected getDatabaseAttributesFromInlineAttributes (attributes: SessionInlineAttributes): SessionDatabaseAttributes {
     return {
       id: attributes.id,
       user_id: attributes.userId,
