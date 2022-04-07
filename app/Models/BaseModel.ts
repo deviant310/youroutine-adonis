@@ -11,8 +11,12 @@ export default abstract class BaseModel<M extends Model> implements Model {
     Object.assign(this, cleanData);
   }
 
+  public serialize (callback?: () => ModelResponseAttributes<M>){
+    if(typeof callback === 'function')
+      callback.bind(this);
+  }
+
   public show (keys: (keyof ModelProperties<M>)[]): this {
-    debugger;
     this.visible = keys;
 
     return this;
@@ -23,7 +27,7 @@ export default abstract class BaseModel<M extends Model> implements Model {
     keys.forEach(key => {
       this.visible.splice(this.visible.findIndex(item => item === key), 1);
     });
-    debugger;
+
     return this;
   }
 

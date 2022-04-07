@@ -15,7 +15,10 @@ const { userRepository, sessionRepository, registrationRepository } = Repositori
 export default class AuthController {
   public async register ({ request }: HttpContextContract): Promise<Registration> {
     const phone: string = request.input('phone');
-    const code = generateVerificationCode();
+    const verificationCode = new VerificationCode({
+      code: generateVerificationCode(),
+      expiresAt: DateTime.now().plus({ minutes: 5 }),
+    });
 
     const user = await userRepository
       .getFirstOfListOrFail({
@@ -26,47 +29,43 @@ export default class AuthController {
     const registration = await registrationRepository
       .add({
         userId: user.id,
-        verificationCode: await Registration
-          .makeVerificationCodeHash(code),
-        expiresAt: DateTime.now().plus({ minutes: 5 }),
+        verificationCodeHash: await Registration.getVerificationCodeHash(verificationCode),
+        expiresAt: verificationCode.expiresAt,
       });
-
-    const verificationCode = new VerificationCode({
-      code: code,
-      expiresAt: registration.expiresAt,
-    });
 
     // @TODO здесь нужно инициировать отправку события типа onRegister
     console.log(registration, verificationCode);
 
-    return registration.show(['id', 'expiresAt']);
+    return registration
+      .serialize(function (this: Registration) {
+        return {
+          id: this.id,
+          expiresAt: this.expiresAt,
+        };
+      });
   }
 
   public async verify ({ request }: HttpContextContract): Promise<AccessToken> {
     const id = request.input('id') as number;
-    const code = request.input('verification_code') as string;
-    const token = generateAccessToken();
-
-    const registration = await registrationRepository
-      .getByIdOrFail(id);
-
+    const registration = await registrationRepository.getByIdOrFail(id);
     const verificationCode = new VerificationCode({
-      code: code,
+      code: request.input('verification_code'),
       expiresAt: registration.expiresAt,
     });
+
+    const token = generateAccessToken();
 
     if (verificationCode.hasExpired())
       throw new Exception('Verification code has expired', 403, 'E_VERIFICATION_CODE_EXPIRED');
 
-    if (!(await registration.verifyCode(code)))
+    if (!(await registration.verify(verificationCode)))
       throw new Exception('Verification failed', 403, 'E_VERIFICATION_FAILED');
 
     await registrationRepository.deleteById(registration.id);
 
     const session = await sessionRepository.add({
       userId: registration.userId,
-      accessToken: Session
-        .makeAccessTokenHash(token),
+      accessTokenHash: Session.makeAccessTokenHash(token),
     });
 
     const accessToken = new AccessToken({
@@ -78,14 +77,15 @@ export default class AuthController {
 
     // @TODO здесь нужно инициировать отправку события типа onVerify
     console.log(session, accessToken);
-    debugger;
-    return accessToken.hide(['uuid']);
+    return accessToken
+      .hide(['uuid'])
+      .serialize(attributes => ({}));
   }
 
   public async logout ({ request }: HttpContextContract): Promise<void> {
     const authorizationHeader = request.header('Authorization');
 
-    if(!authorizationHeader) return;
+    if (!authorizationHeader) return;
 
     const accessToken = AccessToken.fromHeaderValue(authorizationHeader);
     const sessionId = Number(accessToken.uuid);
