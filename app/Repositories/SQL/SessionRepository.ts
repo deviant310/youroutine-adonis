@@ -1,20 +1,20 @@
 import {
-  RepositoryPersistedInferredAttributes,
-  RepositoryProviderInferredAttributes,
+  LocalAttributes,
+  DatabaseAttributes,
 } from '@ioc:Adonis/Core/Repository';
 import Session from 'App/Models/Session';
 import { DateTime } from 'luxon';
 import SQLRepository from './SQLRepository';
 
-type PersistableAttributes = Partial<RepositoryPersistedInferredAttributes<Session>>;
-type ProviderAttributes = Partial<RepositoryProviderInferredAttributes<Session>>;
+type SessionDatabaseAttributes = Partial<DatabaseAttributes<Session>>;
+type SessionLocalAttributes = Partial<LocalAttributes<Session>>;
 
 export default class SessionRepository extends SQLRepository<Session> {
-  protected providerConstructor = Session;
+  protected modelConstructor = Session;
   protected table = 'sessions';
   protected keyName = 'id';
 
-  protected getProviderAttributesFromPersistableAttributes (attributes: PersistableAttributes): ProviderAttributes {
+  protected getLocalAttributesFromDatabaseAttributes (attributes: SessionDatabaseAttributes): SessionLocalAttributes {
     return {
       id: attributes.id ? Number(attributes.id) : undefined,
       userId: attributes.user_id ? Number(attributes.user_id) : undefined,
@@ -26,7 +26,7 @@ export default class SessionRepository extends SQLRepository<Session> {
     };
   }
 
-  protected getPersistableAttributesFromProviderAttributes (attributes: ProviderAttributes): PersistableAttributes {
+  protected getDatabaseAttributesFromLocalAttributes (attributes: SessionLocalAttributes): SessionDatabaseAttributes {
     return {
       id: attributes.id,
       user_id: attributes.userId,

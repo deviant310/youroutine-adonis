@@ -4,10 +4,6 @@ import VerificationCode from 'App/Models/VerificationCode';
 import { DateTime } from 'luxon';
 
 export default class Registration extends BaseModel<Registration> {
-  public static async getVerificationCodeHash (verificationCode: VerificationCode): Promise<string> {
-    return await Hash.make(verificationCode.code);
-  }
-
   public readonly id!: number;
   public userId!: number;
   public verificationCodeHash!: string;

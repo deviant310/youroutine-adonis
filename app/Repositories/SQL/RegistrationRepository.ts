@@ -1,20 +1,20 @@
 import {
-  RepositoryPersistedInferredAttributes,
-  RepositoryProviderInferredAttributes,
+  DatabaseAttributes,
+  LocalAttributes,
 } from '@ioc:Adonis/Core/Repository';
-import Registration from 'App/Models/Registration';
+import Registrati from 'App/Models/Registration';
 import { DateTime } from 'luxon';
 import SQLRepository from './SQLRepository';
 
-type PersistableAttributes = Partial<RepositoryPersistedInferredAttributes<Registration>>;
-type ProviderAttributes = Partial<RepositoryProviderInferredAttributes<Registration>>;
+type RegistrationDatabaseAttributes = Partial<DatabaseAttributes<Registrati>>;
+type RegistrationLocalAttributes = Partial<LocalAttributes<Registrati>>;
 
-export default class RegistrationRepository extends SQLRepository<Registration> {
-  protected providerConstructor = Registration;
+export default class RegistrationRepository extends SQLRepository<Registrati> {
+  protected modelConstructor = Registrati;
   protected table = 'registrations';
   protected keyName = 'id';
 
-  protected getProviderAttributesFromPersistableAttributes (attributes: PersistableAttributes): ProviderAttributes {
+  protected getLocalAttributesFromDatabaseAttributes (attributes: RegistrationDatabaseAttributes): RegistrationLocalAttributes {
     return {
       id: attributes.id ? Number(attributes.id) : undefined,
       userId: attributes.user_id ? Number(attributes.user_id) : undefined,
@@ -25,7 +25,7 @@ export default class RegistrationRepository extends SQLRepository<Registration> 
     };
   }
 
-  protected getPersistableAttributesFromProviderAttributes (attributes: ProviderAttributes): PersistableAttributes {
+  protected getDatabaseAttributesFromLocalAttributes (attributes: RegistrationLocalAttributes): RegistrationDatabaseAttributes {
     return {
       id: attributes.id,
       user_id: attributes.userId,

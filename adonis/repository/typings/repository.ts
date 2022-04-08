@@ -2,52 +2,52 @@ declare module '@ioc:Adonis/Core/Repository' {
   import { DateTime } from 'luxon';
   import { CamelCase, SnakeCase } from 'type-fest';
 
-  export interface Repository<Provider> {
-    getById (id: string | number): Promise<Provider | null>;
+  export interface Repository<Model> {
+    getById (id: string | number): Promise<Model | null>;
 
-    getByIdOrFail (id: string | number): Promise<Provider>;
+    getByIdOrFail (id: string | number): Promise<Model>;
 
-    getFirstOfList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause> | null>;
+    getFirstOfList<Clause extends SamplingClause<Model>> (clause: Clause): Promise<ModelPlucked<Model, Clause> | null>;
 
-    getFirstOfListOrFail<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>>;
+    getFirstOfListOrFail<Clause extends SamplingClause<Model>> (clause: Clause): Promise<ModelPlucked<Model, Clause>>;
 
-    getList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause): Promise<RepositoryProviderPlucked<Provider, Clause>[] | never[]>;
+    getList<Clause extends SamplingClause<Model>> (clause: Clause): Promise<ModelPlucked<Model, Clause>[] | never[]>;
 
-    add (attributes: RepositoryProviderInferredAddAttributes<Provider>): Promise<Provider>;
+    add (attributes: LocalAddAttributes<Model>): Promise<Model>;
 
-    updateById (id: string | number, attributes: RepositoryProviderInferredUpdateAttributes<Provider>): Promise<Provider>;
+    updateById (id: string | number, attributes: LocalUpdateAttributes<Model>): Promise<Model>;
 
     deleteById (id: string | number): Promise<void>;
   }
 
-  type RepositoryProviderProperties<Provider> = Pick<Provider, {
-    [K in keyof Provider]: Provider[K] extends Function ? never : Provider[K] extends RepositoryProviderValues ? K : never;
-  }[keyof Provider]>;
+  type LocalProperties<Model> = Pick<Model, {
+    [K in keyof Model]: Model[K] extends Function ? never : Model[K] extends LocalValues ? K : never;
+  }[keyof Model]>;
 
-  type RepositoryPersistedProperties<Provider> = Pick<Provider, {
-    [K in keyof Provider]: Provider[K] extends Function ? never : K;
-  }[keyof Provider]>;
+  type DatabaseProperties<Model> = Pick<Model, {
+    [K in keyof Model]: Model[K] extends Function ? never : K;
+  }[keyof Model]>;
 
-  export interface RepositorySamplingClause<Provider> {
-    readonly where: Readonly<Partial<RepositoryProviderProperties<Provider>>>;
-    readonly select: readonly (keyof RepositoryProviderProperties<Provider>)[];
+  export interface SamplingClause<Model> {
+    readonly where: Readonly<Partial<LocalProperties<Model>>>;
+    readonly select: readonly (keyof LocalProperties<Model>)[];
   }
 
-  export type RepositoryProviderPlucked<Provider, Clause extends RepositorySamplingClause<Provider>> = Omit<Provider, keyof Omit<RepositoryProviderProperties<Provider>, Clause['select'][number]>>;
+  export type ModelPlucked<Model, Clause extends SamplingClause<Model>> = Omit<Model, keyof Omit<LocalProperties<Model>, Clause['select'][number]>>;
 
-  export type RepositoryPersistedInferredAttributes<Provider, P = RepositoryPersistedProperties<Provider>> = {
-    [K in keyof P as SnakeCase<K>]: RepositoryPersistedValues
+  export type DatabaseAttributes<Model, T = DatabaseProperties<Model>> = {
+    [K in keyof T as SnakeCase<K>]: DatabaseValues
   };
 
-  export type RepositoryProviderInferredAttributes<Provider, P = RepositoryProviderProperties<Provider>> = {
-    [K in keyof P as CamelCase<K>]: P[K]
+  export type LocalAttributes<Model, T = LocalProperties<Model>> = {
+    [K in keyof T as CamelCase<K>]: T[K]
   };
 
-  export type RepositoryProviderInferredAddAttributes<Provider> = OmitReadable<RepositoryProviderInferredAttributes<Provider>>;
+  export type LocalAddAttributes<Model> = OmitReadable<LocalAttributes<Model>>;
 
-  export type RepositoryProviderInferredUpdateAttributes<Provider> = Partial<OmitReadable<RepositoryProviderInferredAttributes<Provider>>>;
+  export type LocalUpdateAttributes<Model> = Partial<OmitReadable<LocalAttributes<Model>>>;
 
-  export type RepositoryProviderValues =
+  export type LocalValues =
     string
     | number
     | boolean
@@ -60,7 +60,7 @@ declare module '@ioc:Adonis/Core/Repository' {
     | null
     | undefined;
 
-  export type RepositoryPersistedValues =
+  export type DatabaseValues =
     string
     | number
     | boolean

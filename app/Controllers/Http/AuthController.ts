@@ -29,7 +29,7 @@ export default class AuthController {
     const registration = await registrationRepository
       .add({
         userId: user.id,
-        verificationCodeHash: await Registration.getVerificationCodeHash(verificationCode),
+        verificationCodeHash: await verificationCode.getHash(),
         expiresAt: verificationCode.expiresAt,
       });
 

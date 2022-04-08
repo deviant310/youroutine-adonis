@@ -1,29 +1,34 @@
 import { Exception } from '@adonisjs/core/build/standalone';
 import {
+  LocalAddAttributes,
+  LocalAttributes,
+  ModelPlucked,
+  LocalUpdateAttributes,
   Repository,
-  RepositoryPersistedInferredAttributes,
-  RepositoryProviderInferredAddAttributes,
-  RepositoryProviderInferredAttributes,
-  RepositoryProviderInferredUpdateAttributes,
-  RepositoryProviderPlucked,
-  RepositorySamplingClause,
+  SamplingClause,
+  DatabaseAttributes,
 } from '@ioc:Adonis/Core/Repository';
 import Database, { DatabaseQueryBuilderContract, InsertQueryBuilderContract } from '@ioc:Adonis/Lucid/Database';
+import { LucidRow } from '@ioc:Adonis/Lucid/Orm';
 import { pickBy } from 'lodash';
 
-export default abstract class SQLRepository<Provider> implements Repository<Provider> {
+export default abstract class SQLRepository<Model> implements Repository<Model> {
   protected db = Database;
-  protected abstract providerConstructor: { new (...args: any): Provider };
+  protected abstract modelConstructor: { new (...args: any): Model };
   protected abstract table: string;
   protected abstract keyName: string;
 
-  protected abstract getProviderAttributesFromPersistableAttributes (attributes: Partial<RepositoryPersistedInferredAttributes<Provider>>): Partial<RepositoryProviderInferredAttributes<Provider>>;
+  protected abstract getLocalAttributesFromDatabaseAttributes (
+    attributes: Partial<DatabaseAttributes<Model>>
+  ): Partial<LocalAttributes<Model>>;
 
-  protected abstract getPersistableAttributesFromProviderAttributes (attributes: Partial<RepositoryProviderInferredAttributes<Provider>>): Partial<RepositoryPersistedInferredAttributes<Provider>>;
+  protected abstract getDatabaseAttributesFromLocalAttributes (
+    attributes: Partial<LocalAttributes<Model>>
+  ): Partial<DatabaseAttributes<Model>>;
 
   public async getById (id: string | number) {
-    type QueryResult = Partial<RepositoryPersistedInferredAttributes<Provider>>;
-    type Result = Provider;
+    type QueryResult = Partial<DatabaseAttributes<Model>>;
+    type Result = Model;
 
     const query = this.db
       .from(this.table)
@@ -34,12 +39,12 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
 
     if (!dbItem) return null;
 
-    const providerAttributes = pickBy(
-      this.getProviderAttributesFromPersistableAttributes(dbItem),
+    const attributes = pickBy(
+      this.getLocalAttributesFromDatabaseAttributes(dbItem),
       value => value !== undefined,
     );
 
-    return new this.providerConstructor(providerAttributes) as Result;
+    return new this.modelConstructor(attributes) as Result;
   }
 
   public async getByIdOrFail (id: string | number) {
@@ -51,9 +56,9 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
     return item;
   }
 
-  public async getFirstOfList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause) {
-    type QueryResult = Partial<RepositoryPersistedInferredAttributes<Provider>>;
-    type Result = RepositoryProviderPlucked<Provider, Clause>;
+  public async getFirstOfList<Clause extends SamplingClause<Model>> (clause: Clause) {
+    type QueryResult = Partial<DatabaseAttributes<Model>>;
+    type Result = ModelPlucked<Model, Clause>;
 
     const { select, where } = clause;
 
@@ -67,15 +72,15 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
 
     if (!dbItem) return null;
 
-    const providerAttributes = pickBy(
-      this.getProviderAttributesFromPersistableAttributes(dbItem),
+    const attributes = pickBy(
+      this.getLocalAttributesFromDatabaseAttributes(dbItem),
       value => value !== undefined,
     );
 
-    return new this.providerConstructor(providerAttributes) as Result;
+    return new this.modelConstructor(attributes) as Result;
   }
 
-  public async getFirstOfListOrFail<Clause extends RepositorySamplingClause<Provider>> (clause: Clause) {
+  public async getFirstOfListOrFail<Clause extends SamplingClause<Model>> (clause: Clause) {
     const item = await this.getFirstOfList(clause);
 
     if (item === null)
@@ -84,9 +89,9 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
     return item;
   }
 
-  public async getList<Clause extends RepositorySamplingClause<Provider>> (clause: Clause) {
-    type QueryResult = Partial<RepositoryPersistedInferredAttributes<Provider>>;
-    type Result = RepositoryProviderPlucked<Provider, Clause>;
+  public async getList<Clause extends SamplingClause<Model>> (clause: Clause) {
+    type QueryResult = Partial<DatabaseAttributes<Model>>;
+    type Result = ModelPlucked<Model, Clause>;
 
     const { select, where } = clause;
 
@@ -99,22 +104,22 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
     const dbItems = await query.exec();
 
     return dbItems.map(dbItem => {
-      const providerAttributes = pickBy(
-        this.getProviderAttributesFromPersistableAttributes(dbItem),
+      const attributes = pickBy(
+        this.getLocalAttributesFromDatabaseAttributes(dbItem),
         value => value !== undefined,
       );
 
-      return new this.providerConstructor(providerAttributes);
+      return new this.modelConstructor(attributes);
     }) as Result[];
   }
 
-  public async add (attributes: RepositoryProviderInferredAddAttributes<Provider>) {
-    type QueryResult = Partial<RepositoryPersistedInferredAttributes<Provider>>;
-    type Result = Provider;
+  public async add (attributes: LocalAddAttributes<Model>) {
+    type QueryResult = Partial<DatabaseAttributes<Model>>;
+    type Result = Model;
 
-    const persistableAttributes = pickBy(
-      this.getPersistableAttributesFromProviderAttributes(
-        attributes as Partial<RepositoryProviderInferredAttributes<Provider>>,
+    const storableAttributes = pickBy(
+      this.getDatabaseAttributesFromLocalAttributes(
+        attributes as Partial<LocalAttributes<Model>>,
       ),
       value => value !== undefined,
     );
@@ -122,42 +127,42 @@ export default abstract class SQLRepository<Provider> implements Repository<Prov
     const query = this.db
       .table(this.table)
       .returning('*')
-      .insert(persistableAttributes) as
+      .insert(storableAttributes) as
       InsertQueryBuilderContract<QueryResult[]>;
 
     const dbItem = (await query.exec())[0];
 
-    const providerAttributes = pickBy(
-      this.getProviderAttributesFromPersistableAttributes(dbItem),
+    const modelAttributes = pickBy(
+      this.getLocalAttributesFromDatabaseAttributes(dbItem),
       value => value !== undefined,
     );
 
-    return new this.providerConstructor(providerAttributes) as Result;
+    return new this.modelConstructor(modelAttributes) as Result;
   }
 
-  public async updateById (id: string | number, attributes: RepositoryProviderInferredUpdateAttributes<Provider>) {
-    type QueryResult = Partial<RepositoryPersistedInferredAttributes<Provider>>;
-    type Result = Provider;
+  public async updateById (id: string | number, attributes: LocalUpdateAttributes<Model>) {
+    type QueryResult = Partial<DatabaseAttributes<Model>>;
+    type Result = Model;
 
-    const persistableAttributes = this
-      .getPersistableAttributesFromProviderAttributes(
-        attributes as Partial<RepositoryProviderInferredAttributes<Provider>>,
+    const storableAttributes = this
+      .getDatabaseAttributesFromLocalAttributes(
+        attributes as Partial<LocalAttributes<Model>>,
       );
 
     const query = this.db
       .from(this.table)
       .where(this.keyName, id)
-      .update(persistableAttributes) as
+      .update(storableAttributes) as
       DatabaseQueryBuilderContract<QueryResult>;
 
     const dbItem = (await query.exec())[0];
 
-    const providerAttributes = pickBy(
-      this.getProviderAttributesFromPersistableAttributes(dbItem),
+    const modelAttributes = pickBy(
+      this.getLocalAttributesFromDatabaseAttributes(dbItem),
       value => value !== undefined,
     );
 
-    return new this.providerConstructor(providerAttributes) as Result;
+    return new this.modelConstructor(modelAttributes) as Result;
   }
 
   public async deleteById (id: string | number) {
