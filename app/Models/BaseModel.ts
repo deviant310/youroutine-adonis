@@ -1,17 +1,29 @@
-import { Model, ModelProperties, ModelResponseAttributes } from '@ioc:Adonis/Core/Model';
+import {
+  Attributes,
+  DirtyAttributes,
+  Model,
+  Properties,
+  SerializedAttributes,
+} from '@ioc:Adonis/Core/Model';
 import { snakeCase } from 'snake-case';
 import { pickBy, transform } from 'lodash';
 
-export default abstract class BaseModel<M extends Model> implements Model {
-  private visible = Object.getOwnPropertyNames(this) as (keyof ModelProperties<M>)[];
+class BaseModel implements Model {
+  //private visible = Object.getOwnPropertyNames(this) as (keyof Properties<this>)[];
 
-  constructor (data: ModelProperties<M>) {
-    const cleanData = pickBy(data, v => v !== undefined);
+  constructor (public $attributes: Attributes<Model>) {
+    //const dirtyAttributes = pickBy(attributes, v => v !== undefined) as DirtyAttributes<this>;
 
-    Object.assign(this, cleanData);
+    return new Proxy(this, {
+      get: (obj: this, key: string) => {
+        const value = obj[key as keyof typeof obj];
+
+        return value !== undefined ? value : obj.$attributes[key as keyof typeof obj.$attributes];
+      },
+    });
   }
 
-  public serialize (callback?: () => ModelResponseAttributes<M>){
+  /*public serialize (callback?: () => ModelResponseAttributes<M>){
     if(typeof callback === 'function')
       callback.bind(this);
   }
@@ -29,16 +41,17 @@ export default abstract class BaseModel<M extends Model> implements Model {
     });
 
     return this;
-  }
+  }*/
 
-  public toJSON (): ModelResponseAttributes<M> {
+  public serialize (): SerializedAttributes<this> {
     type Accumulator = { [key: string]: unknown };
 
-    return transform(Object.getOwnPropertyNames(this), (obj: Accumulator, key) => {
-      if(this.visible.includes(key as never))
-        obj[snakeCase(key)] = this[key as keyof this];
+    return transform(this.$attributes, (obj: Accumulator, value, key) => {
+      obj[snakeCase(key)] = value;
 
       return obj;
-    }, {}) as ModelResponseAttributes<M>;
+    }, {}) as SerializedAttributes<this>;
   }
 }
+
+export default BaseModel;

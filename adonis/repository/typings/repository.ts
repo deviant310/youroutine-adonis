@@ -2,63 +2,42 @@ declare module '@ioc:Adonis/Core/Repository' {
   import { DateTime } from 'luxon';
   import { CamelCase, SnakeCase } from 'type-fest';
 
-  export interface Repository<Model> {
-    getById (id: string | number): Promise<Model | null>;
+  export interface Repository {
+    getByKey (key: string | number): Promise<any>;
 
-    getByIdOrFail (id: string | number): Promise<Model>;
+    getByKeyOrFail (key: string | number): Promise<any>;
 
-    getFirstOfList<Clause extends SamplingClause<Model>> (clause: Clause): Promise<ModelPlucked<Model, Clause> | null>;
+    getFirstOfList<Clause extends SamplingClause> (clause: Clause): Promise<any>;
 
-    getFirstOfListOrFail<Clause extends SamplingClause<Model>> (clause: Clause): Promise<ModelPlucked<Model, Clause>>;
+    getFirstOfListOrFail<Clause extends SamplingClause> (clause: Clause): Promise<any>;
 
-    getList<Clause extends SamplingClause<Model>> (clause: Clause): Promise<ModelPlucked<Model, Clause>[] | never[]>;
+    getList<Clause extends SamplingClause> (clause: Clause): Promise<any>;
 
-    add (attributes: LocalAddAttributes<Model>): Promise<Model>;
+    create (attributes: any): Promise<any>;
 
-    updateById (id: string | number, attributes: LocalUpdateAttributes<Model>): Promise<Model>;
+    updateById (id: string | number, attributes: any): Promise<any>;
 
     deleteById (id: string | number): Promise<void>;
   }
 
-  type LocalProperties<Model> = Pick<Model, {
-    [K in keyof Model]: Model[K] extends Function ? never : Model[K] extends LocalValues ? K : never;
-  }[keyof Model]>;
+  type DatabaseProperties<Entity> = Pick<Entity, {
+    [K in keyof Entity]: Entity[K] extends Function ? never : K;
+  }[keyof Entity]>;
 
-  type DatabaseProperties<Model> = Pick<Model, {
-    [K in keyof Model]: Model[K] extends Function ? never : K;
-  }[keyof Model]>;
-
-  export interface SamplingClause<Model> {
-    readonly where: Readonly<Partial<LocalProperties<Model>>>;
-    readonly select: readonly (keyof LocalProperties<Model>)[];
+  export interface SamplingClause<Properties = object> {
+    readonly where: Readonly<Partial<Properties>>;
+    readonly select: readonly (keyof Properties)[];
   }
 
-  export type ModelPlucked<Model, Clause extends SamplingClause<Model>> = Omit<Model, keyof Omit<LocalProperties<Model>, Clause['select'][number]>>;
+  //export type DirtyAttributes<Attributes> = OmitReadable<Attributes>;
 
-  export type DatabaseAttributes<Model, T = DatabaseProperties<Model>> = {
+  /*export type EntityPlucked<Entity, Clause extends SamplingClause<Entity>> = Omit<Entity, keyof Omit<LocalProperties<Entity>, Clause['select'][number]>>;*/
+
+  /*export type DatabaseAttributes<Entity, T = DatabaseProperties<Entity>> = {
     [K in keyof T as SnakeCase<K>]: DatabaseValues
-  };
+  };*/
 
-  export type LocalAttributes<Model, T = LocalProperties<Model>> = {
-    [K in keyof T as CamelCase<K>]: T[K]
-  };
-
-  export type LocalAddAttributes<Model> = OmitReadable<LocalAttributes<Model>>;
-
-  export type LocalUpdateAttributes<Model> = Partial<OmitReadable<LocalAttributes<Model>>>;
-
-  export type LocalValues =
-    string
-    | number
-    | boolean
-    | DateTime
-    | string[]
-    | number[]
-    | DateTime[]
-    | boolean[]
-    | Buffer
-    | null
-    | undefined;
+  /*export type LocalUpdateAttributes<Entity> = Partial<OmitReadable<LocalAttributes<Entity>>>;*/
 
   export type DatabaseValues =
     string

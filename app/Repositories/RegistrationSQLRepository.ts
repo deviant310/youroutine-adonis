@@ -1,18 +1,19 @@
+import { Attributes } from '@ioc:Adonis/Core/Model';
 import {
-  DatabaseAttributes,
+  DatabaseAttributes, DirtyAttributes,
   LocalAttributes,
 } from '@ioc:Adonis/Core/Repository';
-import Registrati from 'App/Models/Registration';
+import { InsertQueryBuilderContract } from '@ioc:Adonis/Lucid/Database';
+import Registration from 'App/Models/Registration';
 import { DateTime } from 'luxon';
 import SQLRepository from './SQLRepository';
 
 type RegistrationDatabaseAttributes = Partial<DatabaseAttributes<Registrati>>;
 type RegistrationLocalAttributes = Partial<LocalAttributes<Registrati>>;
 
-export default class RegistrationRepository extends SQLRepository<Registrati> {
-  protected modelConstructor = Registrati;
+export default class RegistrationSQLRepository extends SQLRepository<Registration> {
   protected table = 'registrations';
-  protected keyName = 'id';
+  protected keyName = 'id' as const;
 
   protected getLocalAttributesFromDatabaseAttributes (attributes: RegistrationDatabaseAttributes): RegistrationLocalAttributes {
     return {

@@ -9,7 +9,7 @@ import SQLRepository from './SQLRepository';
 type UserDatabaseAttributes = Partial<DatabaseAttributes<User>>;
 type UserLocalAttributes = Partial<LocalAttributes<User>>;
 
-export default class UserRepository extends SQLRepository<User> {
+export default class UserSQLRepository extends SQLRepository<User> {
   protected modelConstructor = User;
   protected table = 'users';
   protected keyName = 'id';

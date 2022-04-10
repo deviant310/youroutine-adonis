@@ -1,20 +1,24 @@
 declare module '@ioc:Adonis/Core/Model' {
   import { DateTime } from 'luxon';
-  import { SnakeCase } from 'type-fest';
+  import { CamelCase, SnakeCase } from 'type-fest';
 
   export type Model = {
-    toJSON (): ModelResponseAttributes<Model>;
+    serialize (): SerializedAttributes<Model>;
   };
 
-  export type ModelProperties<M extends Model> = Pick<M, {
-    [K in keyof M]: M[K] extends Function ? never : M[K] extends ModelDataValues ? K : never;
+  export type Properties<M extends Model> = Pick<M, {
+    [K in keyof M]: M[K] extends Function ? never : M[K] extends Values ? K : never;
   }[keyof M]>;
 
-  export type ModelResponseAttributes<M extends Model, T = ModelProperties<M>> = {
+  export type Attributes<M extends Model, T = Properties<M>> = {
+    [K in keyof T as CamelCase<K>]: T[K]
+  };
+
+  export type SerializedAttributes<M extends Model, T = Properties<M>> = {
     [K in keyof T as SnakeCase<K>]: T[K]
   };
 
-  export type ModelDataValues =
+  export type Values =
     string
     | number
     | boolean

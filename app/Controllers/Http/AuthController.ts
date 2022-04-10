@@ -27,11 +27,12 @@ export default class AuthController {
       });
 
     const registration = await registrationRepository
-      .add({
+      .create({
         userId: user.id,
         verificationCodeHash: await verificationCode.getHash(),
         expiresAt: verificationCode.expiresAt,
       });
+
 
     // @TODO здесь нужно инициировать отправку события типа onRegister
     console.log(registration, verificationCode);

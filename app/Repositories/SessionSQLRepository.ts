@@ -9,7 +9,7 @@ import SQLRepository from './SQLRepository';
 type SessionDatabaseAttributes = Partial<DatabaseAttributes<Session>>;
 type SessionLocalAttributes = Partial<LocalAttributes<Session>>;
 
-export default class SessionRepository extends SQLRepository<Session> {
+export default class SessionSQLRepository extends SQLRepository<Session> {
   protected modelConstructor = Session;
   protected table = 'sessions';
   protected keyName = 'id';

@@ -1,29 +1,30 @@
 import { Exception } from '@adonisjs/core/build/standalone';
+import { Attributes, Properties } from '@ioc:Adonis/Core/Model';
 import {
-  LocalAddAttributes,
+  DatabaseAttributes,
   LocalAttributes,
-  ModelPlucked,
   LocalUpdateAttributes,
+  ModelPlucked,
   Repository,
   SamplingClause,
-  DatabaseAttributes,
 } from '@ioc:Adonis/Core/Repository';
 import Database, { DatabaseQueryBuilderContract, InsertQueryBuilderContract } from '@ioc:Adonis/Lucid/Database';
-import { LucidRow } from '@ioc:Adonis/Lucid/Orm';
+import BaseModel from 'App/Models/BaseModel';
+import Registration from 'App/Models/Registration';
 import { pickBy } from 'lodash';
 
-export default abstract class SQLRepository<Model> implements Repository<Model> {
+export default abstract class SQLRepository<Model extends BaseModel> implements Repository {
   protected db = Database;
   protected abstract modelConstructor: { new (...args: any): Model };
   protected abstract table: string;
-  protected abstract keyName: string;
+  protected abstract keyName: keyof Model;
 
   protected abstract getLocalAttributesFromDatabaseAttributes (
-    attributes: Partial<DatabaseAttributes<Model>>
+    attributes: Partial<DatabaseAttributes<Model>>,
   ): Partial<LocalAttributes<Model>>;
 
   protected abstract getDatabaseAttributesFromLocalAttributes (
-    attributes: Partial<LocalAttributes<Model>>
+    attributes: Partial<LocalAttributes<Model>>,
   ): Partial<DatabaseAttributes<Model>>;
 
   public async getById (id: string | number) {
@@ -56,7 +57,7 @@ export default abstract class SQLRepository<Model> implements Repository<Model> 
     return item;
   }
 
-  public async getFirstOfList<Clause extends SamplingClause<Model>> (clause: Clause) {
+  public async getFirstOfList<Clause extends SamplingClause<Properties<Entity>>> (clause: Clause) {
     type QueryResult = Partial<DatabaseAttributes<Model>>;
     type Result = ModelPlucked<Model, Clause>;
 
@@ -113,7 +114,7 @@ export default abstract class SQLRepository<Model> implements Repository<Model> 
     }) as Result[];
   }
 
-  public async add (attributes: LocalAddAttributes<Model>) {
+  public async create (attributes: OmitReadable<Attributes<Model>>) {
     type QueryResult = Partial<DatabaseAttributes<Model>>;
     type Result = Model;
 
@@ -127,17 +128,15 @@ export default abstract class SQLRepository<Model> implements Repository<Model> 
     const query = this.db
       .table(this.table)
       .returning('*')
-      .insert(storableAttributes) as
-      InsertQueryBuilderContract<QueryResult[]>;
+      .insert(registration.serialize()) as
+      InsertQueryBuilderContract<Model[]>;
 
-    const dbItem = (await query.exec())[0];
-
-    const modelAttributes = pickBy(
+    /*const modelAttributes = pickBy(
       this.getLocalAttributesFromDatabaseAttributes(dbItem),
       value => value !== undefined,
-    );
+    );*/
 
-    return new this.modelConstructor(modelAttributes) as Result;
+    return (await query.exec())[0];
   }
 
   public async updateById (id: string | number, attributes: LocalUpdateAttributes<Model>) {
