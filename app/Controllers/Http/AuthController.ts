@@ -33,7 +33,6 @@ export default class AuthController {
         expiresAt: verificationCode.expiresAt,
       });
 
-
     // @TODO здесь нужно инициировать отправку события типа onRegister
     console.log(registration, verificationCode);
 
